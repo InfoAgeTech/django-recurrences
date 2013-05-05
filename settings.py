@@ -26,6 +26,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django_recurrence',
     'django_nose',
+    'tests',  # adding as an installed app so testing models get picked up.
 )
 
 # Added in django 1.5 secret key is required.  This is a random generated string

@@ -6,10 +6,11 @@ from django_recurrence.managers import RecurrenceManager
 
 
 class AbstractRecurrence(models.Model):
+    """A model mixin for recurrence."""
 
     start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    frequency = FrequencyField()
+    end_date = models.DateTimeField(blank=True, null=True)
+    frequency = FrequencyField(blank=True, null=True)
     objects = RecurrenceManager()
 
     class Meta:
@@ -111,28 +112,35 @@ class AbstractRecurrence(models.Model):
         
         @see http://labix.org/python-dateutil#head-470fa22b2db72000d7abe698a5783a46b0731b57
         """
-        self.frequency = FrequencyField(freq=freq,
-                                        dtstart=self.start_date,
-                                        interval=interval,
-                                        wkst=wkst,
-                                        count=count,
-                                        until=until,
-                                        bysetpos=bysetpos,
-                                        bymonth=bymonth,
-                                        bymonthday=bymonthday,
-                                        byyearday=byyearday,
-                                        byeaster=byeaster,
-                                        byweekno=byweekno,
-                                        byweekday=byweekday,
-                                        byhour=byhour,
-                                        byminute=byminute,
-                                        bysecond=bysecond)
+        frequency = {'freq': freq,
+                     'interval': interval,
+                     'wkst': wkst,
+                     'count': count,
+                     'until': until,
+                     'bysetpos': bysetpos,
+                     'bymonth': bymonth,
+                     'bymonthday': bymonthday,
+                     'byyearday': byyearday,
+                     'byeaster': byeaster,
+                     'byweekno': byweekno,
+                     'byweekday': byweekday,
+                     'byhour': byhour,
+                     'byminute': byminute,
+                     'bysecond': bysecond}
 
+        # Unset any properties that are
+        for key, value in frequency.items():
+            if value is None:
+                del self.frequency[key]
+            else:
+                setattr(self.frequency, key, value)
+
+#        self.frequency = frequency
         # Set the until on the frequency so I can always pull out the end date
         # when the frequency has a definite end date.  If there's a count, then
         # there's a definite end date.
         if count and not until:
-            self.frequency.until = list(rrule(**self.frequency.to_dict()))[-1]
+            self.frequency.until = self.get_dates()[-1]
 
         # if not self.frequency.until:
         #    self.frequency.until = self.end_date or NEVER_ENDING_BILL_DATE
@@ -140,4 +148,16 @@ class AbstractRecurrence(models.Model):
             self.end_date = self.frequency.until
 
     def is_recurring(self):
-        return self.frequency and self.start_date != self.end_date
+        return self.frequency.to_dict() and self.start_date != self.end_date
+
+    def get_dates(self):
+        """Gets the dates for the frequency using rrule."""
+        frequency = self.frequency.to_dict()
+
+        if frequency:
+            return list(rrule(dtstart=self.start_date,
+                              until=self.end_date,
+                              **frequency))
+
+        return [self.start_date]
+

@@ -3,6 +3,7 @@ from datetime import datetime
 from python_dates.converters import int_to_weekday
 from django_tools.fields import JSONField
 from django.db import models
+from dateutil.rrule import DAILY
 
 
 def generic_property(field):
@@ -26,8 +27,6 @@ def list_property(field):
 
 class Frequency(object):
 
-    _value = {}
-
     def _get(self, field):
         return self._value.get(field)
 
@@ -49,8 +48,27 @@ class Frequency(object):
     byminute = list_property(field='byminute')
     bysecond = list_property(field='bysecond')
 
-#    def __init__(self, *args, **kwargs):
-#        return object.__init__(self, *args, **kwargs)
+    def __init__(self, freq=None, **kwargs):
+        """Frequency must be one of:
+        
+        :param freq: Must be one of: YEARLY (0), MONTHLY (1), WEEKLY (2), 
+            DAILY (3), HOURLY (4), MINUTELY (5), or SECONDLY (6)
+            
+        """
+        self._value = {}
+
+        if freq:
+            self.freq = freq
+
+        for field, value in kwargs.items():
+            setattr(self, field, value)
+
+        return super(Frequency, self).__init__()
+
+    def __delitem__(self, key, *args, **kwargs):
+        if key in self._value:
+            del self._value[key]
+
     def to_dict(self):
         return self._value
 
@@ -58,36 +76,11 @@ class Frequency(object):
 class FrequencyField(JSONField):
     """Freqency base off rrule frequency. This doesn't include start or end
     date as those will become top level document params."""
-#    freq = models.IntegerField()
-# #    dtstart = DateTimeField()
-#    interval = models.IntegerField(default=1)
-#    wkst = models.IntegerField()
-#    count = models.IntegerField()
-# #    until = DateTimeField()
-#    # All the following are lists... this stuff should be in the init...
-#    bysetpos = BaseField()
-#    bymonth = BaseField()
-#    bymonthday = BaseField()
-#    byyearday = BaseField()
-#    byeaster = BaseField()
-#    byweekno = BaseField()
-#    byweekday = BaseField()
-#    byhour = BaseField()
-#    byminute = BaseField()
-#    bysecond = BaseField()
-
-    _value = {}
-
-    def _get(self, field):
-        return self._value.get(field)
-
-    def _set(self, value, field):
-        self._value[field] = value
-
-    freq = property(lambda self: self._get(field='freq'),
-                    lambda self, value: self._set(value=int(value), field='freq'))
 
     def to_python(self, value):
+        if not value:
+            return Frequency()
+
         v = super(FrequencyField, self).to_python(value)
 
         if isinstance(v, dict):
@@ -100,10 +93,10 @@ class FrequencyField(JSONField):
                             'or a dict. Not {0}'.format(v.__class__))
 
     def get_prep_value(self, value):
-        # TODO: likely have to access the FreqObj _value field.
-        # return super(FrequencyField, self).get_prep_value(value._value)
-        return super(FrequencyField, self).get_prep_value(value)
+        if not value:
+            return super(FrequencyField, self).get_prep_value(None)
 
+        return super(FrequencyField, self).get_prep_value(value._value)
 
     def save(self, *args, **kwargs):
 
