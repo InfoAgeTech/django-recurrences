@@ -87,13 +87,21 @@ class FrequencyField(JSONField):
     freq = property(lambda self: self._get(field='freq'),
                     lambda self, value: self._set(value=int(value), field='freq'))
 
-
     def to_python(self, value):
         v = super(FrequencyField, self).to_python(value)
-        return Frequency(**v)
+
+        if isinstance(v, dict):
+            return Frequency(**v)
+        elif isinstance(v, Frequency):
+            return v
+        else:
+            # TODO: error, incorrectly typed field
+            raise Exception('FrequencyField should be either a frequency object '
+                            'or a dict. Not {0}'.format(v.__class__))
 
     def get_prep_value(self, value):
         # TODO: likely have to access the FreqObj _value field.
+        # return super(FrequencyField, self).get_prep_value(value._value)
         return super(FrequencyField, self).get_prep_value(value)
 
 
