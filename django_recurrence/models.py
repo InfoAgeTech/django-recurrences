@@ -16,11 +16,11 @@ class AbstractRecurrence(models.Model):
     class Meta:
         abstract = True
 
-    def set_frequency(self, freq,
-                     interval=1, wkst=None, count=None, until=None, bysetpos=None,
-                     bymonth=None, bymonthday=None, byyearday=None, byeaster=None,
-                     byweekno=None, byweekday=None,
-                     byhour=None, byminute=None, bysecond=None):
+    def set_frequency(self, freq, start_date, end_date=None,
+                     interval=1, wkst=None, count=None, bysetpos=None,
+                     bymonth=None, bymonthday=None, byyearday=None,
+                     byeaster=None, byweekno=None, byweekday=None, byhour=None,
+                     byminute=None, bysecond=None):
         """
         :param freq: freq must be one of YEARLY (0), MONTHLY (1), WEEKLY (2), 
             DAILY (3), HOURLY (4), MINUTELY (5), or SECONDLY (6)
@@ -34,7 +34,7 @@ class AbstractRecurrence(models.Model):
                      The default week start is got from calendar.firstweekday(), 
                      and may be modified by calendar.setfirstweekday(). 
         :param count: How many occurrences will be generated. 
-        :param until: If given, this must be a datetime instance, that will 
+        :param end_date: If given, this must be a datetime instance, that will 
                       specify the limit of the recurrence. If a recurrence 
                       instance happens to be the same as the datetime instance 
                       given in the until keyword, this will be the last 
@@ -112,11 +112,13 @@ class AbstractRecurrence(models.Model):
         
         @see http://labix.org/python-dateutil#head-470fa22b2db72000d7abe698a5783a46b0731b57
         """
+        self.start_date = start_date
+        self.end_date = end_date
+
         frequency = {'freq': freq,
                      'interval': interval,
                      'wkst': wkst,
                      'count': count,
-                     'until': until,
                      'bysetpos': bysetpos,
                      'bymonth': bymonth,
                      'bymonthday': bymonthday,
@@ -128,24 +130,12 @@ class AbstractRecurrence(models.Model):
                      'byminute': byminute,
                      'bysecond': bysecond}
 
-        # Unset any properties that are
+        # Unset any properties that are None
         for key, value in frequency.items():
             if value is None:
                 del self.frequency[key]
             else:
                 setattr(self.frequency, key, value)
-
-#        self.frequency = frequency
-        # Set the until on the frequency so I can always pull out the end date
-        # when the frequency has a definite end date.  If there's a count, then
-        # there's a definite end date.
-        if count and not until:
-            self.frequency.until = self.get_dates()[-1]
-
-        # if not self.frequency.until:
-        #    self.frequency.until = self.end_date or NEVER_ENDING_BILL_DATE
-        if self.frequency.until:
-            self.end_date = self.frequency.until
 
     def is_recurring(self):
         return self.frequency.to_dict() and self.start_date != self.end_date

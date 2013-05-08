@@ -72,8 +72,14 @@ class FieldTests(TestCase):
                         datetime(2011, 1, 3),
                         datetime(2011, 1, 4),
                         datetime(2011, 1, 5)]
-        tm = RecurrenceTestModel(start_date=datetime(2011, 1, 1))
-        tm.set_frequency(freq=DAILY, count=5)
+        start_date = datetime(2011, 1, 1)
+
+        tm = RecurrenceTestModel()
+        tm.set_frequency(start_date=start_date,
+                         freq=DAILY,
+                         count=5)
+
+        self.assertEqual(start_date, tm.start_date)
 
         dates = tm.get_dates()
         self.assertEqual(dates, actual_dates)
