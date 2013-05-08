@@ -3,6 +3,13 @@ NOTE: This is not stable yet and will likely change!  Please don't use in produc
 =================
 django-recurrence
 =================
+:Info: django-recurrence is a python recurrence module written for django.
+:Repository: https://github.com/troygrosfield/django-recurrence
+:Author: Troy Grosfield (http://github.com/troygrosfield)
+:Maintainer: Troy Grosfield (http://github.com/troygrosfield)
+
+.. image:: https://travis-ci.org/troygrosfield/django-recurrence.png?branch=master
+  :target: http://travis-ci.org/troygrosfield/django-recurrence
 
 About
 =====
