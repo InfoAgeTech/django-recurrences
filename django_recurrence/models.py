@@ -16,6 +16,10 @@ class AbstractRecurrence(models.Model):
     class Meta:
         abstract = True
 
+    def save(self, *args, **kwargs):
+        self.end_date = self.get_dates()[-1]
+        return super(AbstractRecurrence, self).save(*args, **kwargs)
+
     def set_frequency(self, freq, start_date, end_date=None,
                      interval=1, wkst=None, count=None, bysetpos=None,
                      bymonth=None, bymonthday=None, byyearday=None,
@@ -138,6 +142,7 @@ class AbstractRecurrence(models.Model):
                 setattr(self.frequency, key, value)
 
     def is_recurring(self):
+        # return len(self.get_dates()) > 1
         return self.frequency.to_dict() and self.start_date != self.end_date
 
     def get_dates(self):

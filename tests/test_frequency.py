@@ -3,6 +3,7 @@ from datetime import datetime
 from dateutil.rrule import DAILY
 from django.test import TestCase
 from tests.models import RecurrenceTestModel
+from django_recurrence.constants import Frequency
 
 
 class FieldTests(TestCase):
@@ -15,17 +16,14 @@ class FieldTests(TestCase):
                        frequency={'freq': DAILY, 'interval': 2})
         tm.frequency.freq = 1
         tm.frequency.interval = 2
-        tm.frequency.bysetpos = [5]
+        tm.frequency.count = 5
         tm.save()
 
         tm = RecurrenceTestModel.objects.get(id=tm.id)
 
         self.assertEqual(tm.frequency.freq, 1)
         self.assertEqual(tm.frequency.interval, 2)
-        self.assertEqual(tm.frequency.bysetpos, [5])
-
-        tm.frequency.bysetpos.append(6)
-        self.assertEqual(tm.frequency.bysetpos, [5, 6])
+        self.assertEqual(tm.frequency.count, 5)
         self.assertEqual(tm.start_date, utcnow)
 
     def test_get_dates(self):
@@ -97,3 +95,43 @@ class FieldTests(TestCase):
 
         dates = tm.get_dates()
         self.assertEqual(dates, actual_dates)
+
+
+class RecurrenceManagerTests(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(RecurrenceManagerTests, cls).setUpClass()
+        cls.dates = [datetime(2013, 1, 1),
+                     datetime(2013, 1, 2),
+                     datetime(2013, 1, 3),
+                     datetime(2013, 1, 4),
+                     datetime(2013, 1, 5)]
+
+    def test_create_non_recurring(self):
+        start_date = self.dates[0]
+        tm = RecurrenceTestModel.objects.create(start_date=start_date)
+        self.assertFalse(tm.is_recurring())
+        self.assertEqual(tm.start_date, tm.end_date)
+        self.assertEqual(len(tm.get_dates()), 1)
+
+    def test_create_recurring_by_end_date_daily(self):
+        start_date = self.dates[0]
+        end_date = self.dates[-1]
+        tm = RecurrenceTestModel.objects.create(start_date=start_date,
+                                                end_date=end_date,
+                                                freq=Frequency.DAILY)
+        self.assertTrue(tm.is_recurring())
+        self.assertEqual(len(tm.get_dates()), 5)
+
+    def test_create_recurring_by_count(self):
+        start_date = self.dates[0]
+        end_date = self.dates[-1]
+        count = 5
+        tm = RecurrenceTestModel.objects.create(start_date=start_date,
+                                                freq=Frequency.DAILY,
+                                                count=count)
+        self.assertTrue(tm.is_recurring())
+        self.assertEqual(len(tm.get_dates()), 5)
+        self.assertEqual(tm.get_dates(), self.dates)
+        self.assertEqual(tm.end_date, end_date)

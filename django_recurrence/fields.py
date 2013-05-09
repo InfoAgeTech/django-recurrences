@@ -61,7 +61,8 @@ class Frequency(object):
             self.freq = freq
 
         for field, value in kwargs.items():
-            setattr(self, field, value)
+            if value is not None:
+                setattr(self, field, value)
 
         return super(Frequency, self).__init__()
 
@@ -83,10 +84,10 @@ class FrequencyField(JSONField):
 
         v = super(FrequencyField, self).to_python(value)
 
-        if isinstance(v, dict):
-            return Frequency(**v)
-        elif isinstance(v, Frequency):
+        if isinstance(v, Frequency):
             return v
+        elif isinstance(v, dict):
+            return Frequency(**v)
         else:
             # TODO: error, incorrectly typed field
             raise Exception('FrequencyField should be either a frequency object '
