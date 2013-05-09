@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from dateutil.rrule import rrule
 from django.db import models
+from django_recurrence.constants import Frequency
 from django_recurrence.fields import FrequencyField
 from django_recurrence.managers import RecurrenceManager
 from python_dates.converters import int_to_weekday
-from django_recurrence.constants import Frequency
 
 
 class AbstractRecurrence(models.Model):
