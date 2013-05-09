@@ -3,6 +3,8 @@ from dateutil.rrule import rrule
 from django.db import models
 from django_recurrence.fields import FrequencyField
 from django_recurrence.managers import RecurrenceManager
+from python_dates.converters import int_to_weekday
+from django_recurrence.constants import Frequency
 
 
 class AbstractRecurrence(models.Model):
@@ -156,3 +158,83 @@ class AbstractRecurrence(models.Model):
 
         return [self.start_date]
 
+    def frequency_str(self):
+        """
+        Formats the Frequency into a human readable friendly string format.
+
+        Freq values:
+
+            0 = YEARLY
+            1 = MONTHLY
+            2 = WEEKLY
+            3 = DAILY
+            4 = HOURLY
+            5 = MINUTELY
+            6 = SECONDLY
+
+        Format:
+
+            {{ OCCURRENCE }}, {{ START_DATE }} - {{ END_DATE }}
+
+        Examples:
+
+            'Every Tuesday and Thursday, Nov. 1, 2011 - Nov. 10, 2011'
+            'Daily, Nov. 1, 2011 - Nov. 10, 2011'
+
+        """
+        def _get_weekday_str(weekdays):
+            """
+            Takes the byweekday iterable of ints and converts to String days.
+
+            Example:
+
+                >>> _get_weekdays([0, 2])
+                u'Sunday and Tuesday'
+                >>> _get_weekdays([0, 1, 2])
+                u'Sunday, Monday and Tuesday'
+            """
+            if isinstance(weekdays, int):
+                days = [int_to_weekday(weekdays)]
+            else:
+                days = [int_to_weekday(day) for day in weekdays]
+
+            weekday_str = u''
+
+            for i, d in enumerate(days):
+                weekday_str += d
+
+                if i == 0 and len(days) == 1:
+                    weekday_str += u' '
+
+                if i < len(days) - 2: weekday_str += u', '
+                elif i == len(days) - 2: weekday_str += u' and '
+
+            return weekday_str
+
+        date_format = '%b %d, %Y'
+
+        if self.frequency.count:
+            to_from = _('Starting {0} occurring {1} times').format(self.start_date.strftime(date_format),
+                                                                   self.frequency.count)
+        elif self.is_recurring:
+            to_from = u'{0} - {1}'.format(self.start_date.strftime(date_format),
+                                          self.end_date.strftime(date_format))
+        else:
+            to_from = ''
+
+        freq = self.frequency.freq
+        if freq == Frequency.YEARLY:
+            frequency = u'Every year'
+        elif freq == Frequency.MONTHLY:
+            frequency = u'Every month'
+        elif freq == Frequency.WEEKLY:
+            weekday_str = _get_weekday_str(self.frequency.byweekday) if self.frequency.byweekday else u'week'
+            frequency = u'Every {0}'.format(weekday_str)
+        elif freq == Frequency.DAILY:
+            frequency = u'Everyday'
+        elif freq == Frequency.HOURLY:
+            frequency = u'Every hour'
+
+        if to_from:
+            return u'{0}, {1}'.format(frequency, to_from)
+        return u'{0}'.format(frequency)

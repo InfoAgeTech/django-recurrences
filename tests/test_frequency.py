@@ -96,6 +96,27 @@ class FieldTests(TestCase):
         dates = tm.get_dates()
         self.assertEqual(dates, actual_dates)
 
+    def test_frequency_string(self):
+        """
+        Tests that a bill frequency string generates correctly.
+        """
+        start_date = datetime(2011, 11, 21)
+        end_date = datetime(2011, 11, 25)
+        tm = RecurrenceTestModel.objects.create(start_date=start_date,
+                                                end_date=end_date,
+                                                freq=Frequency.DAILY)
+        self.assertEquals(tm.frequency_str(),
+                          u'Everyday, Nov 21, 2011 - Nov 25, 2011')
+
+        tm.set_frequency(start_date=start_date,
+                         end_date=datetime(2011, 12, 2),
+                         freq=Frequency.WEEKLY,
+                         byweekday=[0, 2, 4])
+        tm.save()
+
+        self.assertEquals(tm.frequency_str(),
+                          u'Every Monday, Wednesday and Friday, Nov 21, 2011 - Dec 02, 2011')
+
 
 class RecurrenceManagerTests(TestCase):
 
