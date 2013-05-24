@@ -26,6 +26,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django_recurrence',
     'django_nose',
+    'python_dates',
     'tests',  # adding as an installed app so testing models get picked up.
 )
 
