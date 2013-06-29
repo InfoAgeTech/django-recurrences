@@ -3,17 +3,12 @@ NOTE: This is not stable yet and will likely change!  Please don't use in produc
 =================
 django-recurrence
 =================
-:Info: django-recurrence is a python recurrence module written for django.
-:Repository: https://github.com/InfoAgeTech/django-recurrence
-:Author: Troy Grosfield (http://github.com/troygrosfield)
-:Maintainer: Troy Grosfield (http://github.com/troygrosfield)
+django-recurrence is a python recurrence module written for django.
 
+Build Status
+============
 .. image:: https://travis-ci.org/InfoAgeTech/django-recurrence.png?branch=master
   :target: http://travis-ci.org/InfoAgeTech/django-recurrence
-
-About
-=====
-django-recurrence is a python recurrence module written for django.
 
 Intallation
 ===========
@@ -29,4 +24,6 @@ TODO
 
 Tests
 =====
-run: ``python manage.py test``
+From the project root where the manage.py file is, run::
+
+   python manage.py test
