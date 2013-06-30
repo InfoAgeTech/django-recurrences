@@ -55,7 +55,7 @@ class Frequency(object):
         """
         self._value = {}
 
-        if freq:
+        if freq is not None:
             self.freq = freq
 
         for field, value in kwargs.items():
