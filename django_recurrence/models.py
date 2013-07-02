@@ -20,7 +20,9 @@ class AbstractRecurrence(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
-        self.end_date = self.get_dates()[-1]
+        if not self.end_date:
+            self.end_date = self.get_dates()[-1]
+
         return super(AbstractRecurrence, self).save(*args, **kwargs)
 
     def set_recurrence(self, freq, start_date, end_date=None, interval=1,

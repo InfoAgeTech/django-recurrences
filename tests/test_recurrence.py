@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from dateutil.rrule import DAILY
+from dateutil.rrule import WE, TH
 from django.test import TestCase
 from django_recurrence.constants import Frequency
 from tests.models import RecurrenceTestModel
@@ -130,6 +131,7 @@ class RecurrenceManagerTests(TestCase):
                      datetime(2013, 1, 5)]
 
     def test_create_non_recurring(self):
+        """Test for creating a non recurring object."""
         start_date = self.dates[0]
         tm = RecurrenceTestModel.objects.create(start_date=start_date)
         self.assertFalse(tm.is_recurring())
@@ -137,6 +139,7 @@ class RecurrenceManagerTests(TestCase):
         self.assertEqual(len(tm.get_dates()), 1)
 
     def test_create_recurrence_by_end_date_daily(self):
+        """Test for creating a daily recurring object."""
         start_date = self.dates[0]
         end_date = self.dates[-1]
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
@@ -146,6 +149,7 @@ class RecurrenceManagerTests(TestCase):
         self.assertEqual(len(tm.get_dates()), 5)
 
     def test_create_recurrence_by_count(self):
+        """Test for creating a recurring object by count."""
         start_date = self.dates[0]
         end_date = self.dates[-1]
         count = 5
@@ -155,4 +159,66 @@ class RecurrenceManagerTests(TestCase):
         self.assertTrue(tm.is_recurring())
         self.assertEqual(len(tm.get_dates()), 5)
         self.assertEqual(tm.get_dates(), self.dates)
+        self.assertEqual(tm.end_date, end_date)
+
+    def test_create_recurrence_by_weekday_int(self):
+        """Create recurrence by a integer weekday."""
+        start_date = self.dates[0]
+        end_date = self.dates[-1]
+        tm = RecurrenceTestModel.objects.create(start_date=start_date,
+                                                end_date=end_date,
+                                                freq=Frequency.DAILY,
+                                                byweekday=4)
+        dates = tm.get_dates()
+
+        self.assertTrue(tm.is_recurring())
+        self.assertEqual(len(dates), 1)
+        self.assertEqual(tm.get_dates()[0], datetime(2013, 1, 4))
+        self.assertEqual(tm.end_date, end_date)
+
+    def test_create_recurrence_by_weekday_int_list(self):
+        """Create recurrence by a list of integer weekdays."""
+        start_date = self.dates[0]
+        end_date = self.dates[-1]
+        tm = RecurrenceTestModel.objects.create(start_date=start_date,
+                                                end_date=end_date,
+                                                freq=Frequency.DAILY,
+                                                byweekday=[3, 4])
+        dates = tm.get_dates()
+
+        self.assertTrue(tm.is_recurring())
+        self.assertEqual(len(dates), 2)
+        self.assertEqual(tm.get_dates()[0], datetime(2013, 1, 3))
+        self.assertEqual(tm.get_dates()[1], datetime(2013, 1, 4))
+        self.assertEqual(tm.end_date, end_date)
+
+    def test_create_recurrence_by_weekday_rrule_day(self):
+        """Create recurrence by a weekday using the rrule day."""
+        start_date = self.dates[0]
+        end_date = self.dates[-1]
+        tm = RecurrenceTestModel.objects.create(start_date=start_date,
+                                                end_date=end_date,
+                                                freq=Frequency.DAILY,
+                                                byweekday=TH)
+        dates = tm.get_dates()
+
+        self.assertTrue(tm.is_recurring())
+        self.assertEqual(len(dates), 1)
+        self.assertEqual(tm.get_dates()[0], datetime(2013, 1, 3))
+        self.assertEqual(tm.end_date, end_date)
+
+    def test_create_recurrence_by_weekday_rrule_day_list(self):
+        """Create recurrence by a weekday using the rrule days."""
+        start_date = self.dates[0]
+        end_date = self.dates[-1]
+        tm = RecurrenceTestModel.objects.create(start_date=start_date,
+                                                end_date=end_date,
+                                                freq=Frequency.DAILY,
+                                                byweekday=[WE, TH])
+        dates = tm.get_dates()
+
+        self.assertTrue(tm.is_recurring())
+        self.assertEqual(len(dates), 2)
+        self.assertEqual(tm.get_dates()[0], datetime(2013, 1, 2))
+        self.assertEqual(tm.get_dates()[1], datetime(2013, 1, 3))
         self.assertEqual(tm.end_date, end_date)

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+from dateutil.rrule import weekday
 from django_tools.fields import JSONField
-from python_dates.converters import int_to_weekday
+import collections
 
 
 def generic_property(field):
-    """Defines the getter and setter for a generic propery.  The value can
+    """Defines the getter and setter for a generic property.  The value can
     be any type.
     """
     return property(lambda self: self._get(field=field),
@@ -18,18 +18,36 @@ def int_property(field):
                     lambda self, value: self._set(value=int(value),
                                                   field=field))
 
+def _set_list_property(self, value, field):
+    """Ensures a list is returned for a list property field.
+    
+    This method allows rrule weekdays or lists or tuples of rrule weekdays to 
+    be passed in as a value. The problem with that is the rrule weekdays aren't
+    serializeable. So, to fix that checks are made to convert the rrule weekdays
+    to integers which jives well with the database.
+    """
+    if isinstance(value, weekday):
+        value = value.weekday
+
+    if isinstance(value, (list, tuple)):
+        value = list(value)
+        for index, item in enumerate(value):
+            if isinstance(item, weekday):
+                value[index] = item.weekday
+
+    self._set(value=list(value)
+                    if isinstance(value, collections.Iterable)
+                    else [value],
+              field=field)
+
 def list_property(field):
+    """Property for a field that should be stored as a list."""
     return property(lambda self: self._get(field=field),
-                    lambda self, value: self._set(value=list(value),
-                                                  field=field))
+                    lambda self, value: _set_list_property(self, value, field))
+
 
 class Recurrence(object):
-
-    def _get(self, field):
-        return self._value.get(field)
-
-    def _set(self, value, field):
-        self._value[field] = value
+    """Represents recurrence for an object."""
 
     freq = int_property(field='freq')
     interval = int_property(field='interval')
@@ -64,6 +82,12 @@ class Recurrence(object):
 
         return super(Recurrence, self).__init__()
 
+    def _get(self, field):
+        return self._value.get(field)
+
+    def _set(self, value, field):
+        self._value[field] = value
+
     def __delitem__(self, key, *args, **kwargs):
         if key in self._value:
             del self._value[key]
@@ -73,8 +97,9 @@ class Recurrence(object):
 
 
 class RecurrenceField(JSONField):
-    """Recurrence base off rrule frequency. This doesn't include start or end
-    date as those will become top level document params."""
+    """Recurrence base off rrule recurrence attributes. This doesn't include 
+    start or end date as those will become top level document params.
+    """
 
     def to_python(self, value):
         if not value:
