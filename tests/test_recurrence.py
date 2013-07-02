@@ -2,28 +2,28 @@
 from datetime import datetime
 from dateutil.rrule import DAILY
 from django.test import TestCase
-from tests.models import RecurrenceTestModel
 from django_recurrence.constants import Frequency
+from tests.models import RecurrenceTestModel
 
 
 class FieldTests(TestCase):
 
-    def test_frequency_field(self):
-        """Test to make sure everything saves correctly on the frequency field.
+    def test_recurrence_field(self):
+        """Test to make sure everything saves correctly on the recurrence field.
         """
         utcnow = datetime.utcnow()
         tm = RecurrenceTestModel(start_date=utcnow,
-                       frequency={'freq': DAILY, 'interval': 2})
-        tm.frequency.freq = 1
-        tm.frequency.interval = 2
-        tm.frequency.count = 5
+                                 recurrence={'freq': DAILY, 'interval': 2})
+        tm.recurrence.freq = 1
+        tm.recurrence.interval = 2
+        tm.recurrence.count = 5
         tm.save()
 
         tm = RecurrenceTestModel.objects.get(id=tm.id)
 
-        self.assertEqual(tm.frequency.freq, 1)
-        self.assertEqual(tm.frequency.interval, 2)
-        self.assertEqual(tm.frequency.count, 5)
+        self.assertEqual(tm.recurrence.freq, 1)
+        self.assertEqual(tm.recurrence.interval, 2)
+        self.assertEqual(tm.recurrence.count, 5)
         self.assertEqual(tm.start_date, utcnow)
 
     def test_get_dates(self):
@@ -33,13 +33,13 @@ class FieldTests(TestCase):
                         datetime(2011, 1, 3, 0, 0)]
 
         tm = RecurrenceTestModel(start_date=datetime(2011, 1, 1),
-                       end_date=datetime(2011, 1, 3),
-                       frequency={'freq': DAILY})
+                                 end_date=datetime(2011, 1, 3),
+                                 recurrence={'freq': DAILY})
         dates = tm.get_dates()
 
         self.assertEqual(actual_dates, dates)
 
-    def test_no_frequency(self):
+    def test_no_recurrence(self):
         """Test when there's only 1 occurrence."""
         start_date = datetime(2011, 1, 1)
         tm = RecurrenceTestModel(start_date=start_date)
@@ -54,8 +54,8 @@ class FieldTests(TestCase):
     def test_is_recurring(self):
         """Test for object that is recurring."""
         tm = RecurrenceTestModel(start_date=datetime(2011, 1, 1),
-                       end_date=datetime(2011, 1, 3),
-                       frequency={'freq': DAILY})
+                                 end_date=datetime(2011, 1, 3),
+                                 recurrence={'freq': DAILY})
         self.assertTrue(tm.is_recurring())
 
     def test_is_not_recurring(self):
@@ -63,8 +63,8 @@ class FieldTests(TestCase):
         tm = RecurrenceTestModel(start_date=datetime(2011, 1, 1))
         self.assertFalse(tm.is_recurring())
 
-    def test_set_frequency(self):
-        """Test setting the frequency."""
+    def test_set_recurrence(self):
+        """Test setting the recurrence."""
         actual_dates = [datetime(2011, 1, 1),
                         datetime(2011, 1, 2),
                         datetime(2011, 1, 3),
@@ -73,48 +73,48 @@ class FieldTests(TestCase):
         start_date = datetime(2011, 1, 1)
 
         tm = RecurrenceTestModel()
-        tm.set_frequency(start_date=start_date,
-                         freq=DAILY,
-                         count=5)
+        tm.set_recurrence(start_date=start_date,
+                          freq=DAILY,
+                          count=5)
 
         self.assertEqual(start_date, tm.start_date)
 
         dates = tm.get_dates()
         self.assertEqual(dates, actual_dates)
 
-    def test_set_frequency_manual(self):
-        """Test setting the frequency."""
+    def test_set_recurrence_manual(self):
+        """Test setting the recurrence."""
         actual_dates = [datetime(2011, 1, 1),
                         datetime(2011, 1, 2),
                         datetime(2011, 1, 3),
                         datetime(2011, 1, 4),
                         datetime(2011, 1, 5)]
         tm = RecurrenceTestModel(start_date=datetime(2011, 1, 1))
-        tm.frequency.freq = DAILY
-        tm.frequency.count = 5
+        tm.recurrence.freq = DAILY
+        tm.recurrence.count = 5
 
         dates = tm.get_dates()
         self.assertEqual(dates, actual_dates)
 
-    def test_frequency_string(self):
+    def test_recurrence_string(self):
         """
-        Tests that a bill frequency string generates correctly.
+        Tests that a bill recurrence string generates correctly.
         """
         start_date = datetime(2011, 11, 21)
         end_date = datetime(2011, 11, 25)
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
                                                 end_date=end_date,
                                                 freq=Frequency.DAILY)
-        self.assertEquals(tm.frequency_str(),
+        self.assertEquals(tm.recurrence_str(),
                           u'Everyday, Nov 21, 2011 - Nov 25, 2011')
 
-        tm.set_frequency(start_date=start_date,
+        tm.set_recurrence(start_date=start_date,
                          end_date=datetime(2011, 12, 2),
                          freq=Frequency.WEEKLY,
                          byweekday=[0, 2, 4])
         tm.save()
 
-        self.assertEquals(tm.frequency_str(),
+        self.assertEquals(tm.recurrence_str(),
                           u'Every Monday, Wednesday and Friday, Nov 21, 2011 - Dec 02, 2011')
 
 
@@ -136,7 +136,7 @@ class RecurrenceManagerTests(TestCase):
         self.assertEqual(tm.start_date, tm.end_date)
         self.assertEqual(len(tm.get_dates()), 1)
 
-    def test_create_recurring_by_end_date_daily(self):
+    def test_create_recurrence_by_end_date_daily(self):
         start_date = self.dates[0]
         end_date = self.dates[-1]
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
@@ -145,7 +145,7 @@ class RecurrenceManagerTests(TestCase):
         self.assertTrue(tm.is_recurring())
         self.assertEqual(len(tm.get_dates()), 5)
 
-    def test_create_recurring_by_count(self):
+    def test_create_recurrence_by_count(self):
         start_date = self.dates[0]
         end_date = self.dates[-1]
         count = 5

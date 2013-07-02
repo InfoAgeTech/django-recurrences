@@ -23,7 +23,7 @@ def list_property(field):
                     lambda self, value: self._set(value=list(value),
                                                   field=field))
 
-class Frequency(object):
+class Recurrence(object):
 
     def _get(self, field):
         return self._value.get(field)
@@ -62,7 +62,7 @@ class Frequency(object):
             if value is not None:
                 setattr(self, field, value)
 
-        return super(Frequency, self).__init__()
+        return super(Recurrence, self).__init__()
 
     def __delitem__(self, key, *args, **kwargs):
         if key in self._value:
@@ -72,30 +72,30 @@ class Frequency(object):
         return self._value
 
 
-class FrequencyField(JSONField):
-    """Freqency base off rrule frequency. This doesn't include start or end
+class RecurrenceField(JSONField):
+    """Recurrence base off rrule frequency. This doesn't include start or end
     date as those will become top level document params."""
 
     def to_python(self, value):
         if not value:
-            return Frequency()
+            return Recurrence()
 
-        v = super(FrequencyField, self).to_python(value)
+        v = super(RecurrenceField, self).to_python(value)
 
-        if isinstance(v, Frequency):
+        if isinstance(v, Recurrence):
             return v
         elif isinstance(v, dict):
-            return Frequency(**v)
+            return Recurrence(**v)
         else:
             # TODO: error, incorrectly typed field
-            raise Exception('FrequencyField should be either a frequency object '
+            raise Exception('RecurrenceField should be either a frequency object '
                             'or a dict. Not {0}'.format(v.__class__))
 
     def get_prep_value(self, value):
         if not value:
-            return super(FrequencyField, self).get_prep_value(None)
+            return super(RecurrenceField, self).get_prep_value(None)
 
-        return super(FrequencyField, self).get_prep_value(value._value)
+        return super(RecurrenceField, self).get_prep_value(value._value)
 
     def save(self, *args, **kwargs):
 
@@ -129,7 +129,7 @@ class FrequencyField(JSONField):
         if isinstance(self.bysecond, int):
             self.bysecond = [self.bysecond]
 
-        return super(FrequencyField, self).save(*args, **kwargs)
+        return super(RecurrenceField, self).save(*args, **kwargs)
 
     def to_dict(self):
         rr = {}

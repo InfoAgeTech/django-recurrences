@@ -2,9 +2,10 @@
 from dateutil.rrule import rrule
 from django.db import models
 from django_recurrence.constants import Frequency
-from django_recurrence.fields import FrequencyField
+from django_recurrence.fields import RecurrenceField
 from django_recurrence.managers import RecurrenceManager
 from python_dates.converters import int_to_weekday
+from django_recurrence.fields import Recurrence
 
 
 class AbstractRecurrence(models.Model):
@@ -12,7 +13,7 @@ class AbstractRecurrence(models.Model):
 
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(blank=True, null=True)
-    frequency = FrequencyField(blank=True, null=True)
+    recurrence = RecurrenceField(blank=True, null=True)
     objects = RecurrenceManager()
 
     class Meta:
@@ -22,11 +23,8 @@ class AbstractRecurrence(models.Model):
         self.end_date = self.get_dates()[-1]
         return super(AbstractRecurrence, self).save(*args, **kwargs)
 
-    def set_frequency(self, freq, start_date, end_date=None,
-                     interval=1, wkst=None, count=None, bysetpos=None,
-                     bymonth=None, bymonthday=None, byyearday=None,
-                     byeaster=None, byweekno=None, byweekday=None, byhour=None,
-                     byminute=None, bysecond=None):
+    def set_recurrence(self, freq, start_date, end_date=None, interval=1,
+                       count=None, **kwargs):
         """
         :param freq: freq must be one of YEARLY (0), MONTHLY (1), WEEKLY (2), 
             DAILY (3), HOURLY (4), MINUTELY (5), or SECONDLY (6)
@@ -121,35 +119,29 @@ class AbstractRecurrence(models.Model):
         self.start_date = start_date
         self.end_date = end_date
 
-        frequency = {'freq': freq,
-                     'interval': interval,
-                     'wkst': wkst,
-                     'count': count,
-                     'bysetpos': bysetpos,
-                     'bymonth': bymonth,
-                     'bymonthday': bymonthday,
-                     'byyearday': byyearday,
-                     'byeaster': byeaster,
-                     'byweekno': byweekno,
-                     'byweekday': byweekday,
-                     'byhour': byhour,
-                     'byminute': byminute,
-                     'bysecond': bysecond}
-
-        # Unset any properties that are None
-        for key, value in frequency.items():
-            if value is None:
-                del self.frequency[key]
-            else:
-                setattr(self.frequency, key, value)
+        self.recurrence = Recurrence(freq=freq,
+                                     interval=interval,
+                                     count=count,
+                                     **kwargs)
+#         recurrence = kwargs if kwargs else {}
+#         recurrence['freq'] = freq
+#         recurrence['interval'] = interval
+#         recurrence['count'] = count
+#
+#         # Unset any properties that are None
+#         for key, value in recurrence.items():
+#             if value is None:
+#                 del self.recurrence[key]
+#             else:
+#                 setattr(self.recurrence, key, value)
 
     def is_recurring(self):
         # return len(self.get_dates()) > 1
-        return self.frequency.to_dict() and self.start_date != self.end_date
+        return self.recurrence.to_dict() and self.start_date != self.end_date
 
     def get_dates(self):
         """Gets the dates for the frequency using rrule."""
-        frequency = self.frequency.to_dict()
+        frequency = self.recurrence.to_dict()
 
         if frequency:
             return list(rrule(dtstart=self.start_date,
@@ -158,7 +150,7 @@ class AbstractRecurrence(models.Model):
 
         return [self.start_date]
 
-    def frequency_str(self):
+    def recurrence_str(self):
         """
         Formats the Frequency into a human readable friendly string format.
 
@@ -213,22 +205,22 @@ class AbstractRecurrence(models.Model):
 
         date_format = '%b %d, %Y'
 
-        if self.frequency.count:
+        if self.recurrence.count:
             to_from = _('Starting {0} occurring {1} times').format(self.start_date.strftime(date_format),
-                                                                   self.frequency.count)
+                                                                   self.recurrence.count)
         elif self.is_recurring:
             to_from = u'{0} - {1}'.format(self.start_date.strftime(date_format),
                                           self.end_date.strftime(date_format))
         else:
             to_from = ''
 
-        freq = self.frequency.freq
+        freq = self.recurrence.freq
         if freq == Frequency.YEARLY:
             frequency = u'Every year'
         elif freq == Frequency.MONTHLY:
             frequency = u'Every month'
         elif freq == Frequency.WEEKLY:
-            weekday_str = _get_weekday_str(self.frequency.byweekday) if self.frequency.byweekday else u'week'
+            weekday_str = _get_weekday_str(self.recurrence.byweekday) if self.recurrence.byweekday else u'week'
             frequency = u'Every {0}'.format(weekday_str)
         elif freq == Frequency.DAILY:
             frequency = u'Everyday'

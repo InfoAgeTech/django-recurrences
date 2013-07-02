@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 from django_recurrence.constants import Frequency as FreqChoice
-from django_recurrence.fields import Frequency
+from django_recurrence.fields import Recurrence
 
 
 class RecurrenceManager(models.Manager):
@@ -18,22 +18,22 @@ class RecurrenceManager(models.Manager):
             return super(RecurrenceManager, self).create(start_date=start_date,
                                                          **kwargs)
 
-        frequency = Frequency(freq=freq,
-                              interval=interval,
-                              wkst=wkst,
-                              count=count,
-                              bysetpos=bysetpos,
-                              bymonth=bymonth,
-                              bymonthday=bymonthday,
-                              byyearday=byyearday,
-                              byeaster=byeaster,
-                              byweekno=byweekno,
-                              byweekday=byweekday,
-                              byhour=byhour,
-                              byminute=byminute,
-                              bysecond=bysecond)
+        recurrence = Recurrence(freq=freq,
+                                interval=interval,
+                                wkst=wkst,
+                                count=count,
+                                bysetpos=bysetpos,
+                                bymonth=bymonth,
+                                bymonthday=bymonthday,
+                                byyearday=byyearday,
+                                byeaster=byeaster,
+                                byweekno=byweekno,
+                                byweekday=byweekday,
+                                byhour=byhour,
+                                byminute=byminute,
+                                bysecond=bysecond)
 
         return super(RecurrenceManager, self).create(start_date=start_date,
                                                      end_date=end_date,
-                                                     frequency=frequency,
+                                                     recurrence=recurrence,
                                                      **kwargs)
