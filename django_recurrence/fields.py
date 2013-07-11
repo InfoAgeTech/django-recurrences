@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from dateutil.rrule import weekday
-from django_tools.fields import JSONField
+from django_core.fields import JSONField
 import collections
 
 
