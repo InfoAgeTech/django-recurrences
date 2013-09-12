@@ -139,7 +139,7 @@ class AbstractRecurrence(models.Model):
 
     def is_recurring(self):
         # return len(self.get_dates()) > 1
-        return self.recurrence.to_dict() and self.start_date != self.end_date
+        return self.recurrence.to_dict() != {} and self.start_date != self.end_date
 
     def get_dates(self):
         """Gets the dates for the frequency using rrule."""
