@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from .contants import FrequencyChoices
-from .widgets import FrequencyWidget
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.fields import MultiValueField
 from python_dates.parsers import parse_date
 
+from .choices import FrequencyChoices
+from .widgets import FrequencyWidget
 
 
 class FrequencyFormFields(object):
@@ -20,9 +20,6 @@ class FrequencyFormFields(object):
 class RecurrenceField(MultiValueField):
 
     widget = FrequencyWidget
-
-
-
 
     def __init__(self, *args, **kwargs):
         kwargs['fields'] = (forms.ChoiceField(choices=FrequencyChoices.ALL),

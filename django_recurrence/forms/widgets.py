@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from django_forms.html5.widgets import Html5DateInput
 from django_forms.html5.widgets import Html5NumberInput
 
-from .contants import FrequencyChoices
+from .choices import FrequencyChoices
 
 
 class FrequencyWidget(MultiWidget):

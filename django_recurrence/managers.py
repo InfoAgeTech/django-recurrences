@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.db import models
-from django_recurrence.constants import Frequency as FreqChoice
-from django_recurrence.fields import Recurrence
+
+from .constants import Frequency as FreqChoice
+from .fields import Recurrence
 
 
 class RecurrenceManager(models.Manager):

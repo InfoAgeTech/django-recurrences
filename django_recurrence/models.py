@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+
 from dateutil.rrule import rrule
 from django.db import models
 from django.utils.translation import ugettext as _
-from django_recurrence.constants import Frequency
-from django_recurrence.fields import Recurrence
-from django_recurrence.fields import RecurrenceField
-from django_recurrence.managers import RecurrenceManager
 from python_dates.converters import int_to_weekday
+
+from .constants import Frequency
+from .fields import Recurrence
+from .fields import RecurrenceField
+from .managers import RecurrenceManager
 
 
 class AbstractRecurrence(models.Model):

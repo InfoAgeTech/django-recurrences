@@ -12,19 +12,21 @@ def generic_property(field):
                     lambda self, value: self._set(value=value,
                                                   field=field))
 
+
 def int_property(field):
     """Property for an int field."""
     return property(lambda self: self._get(field=field),
                     lambda self, value: self._set(value=int(value),
                                                   field=field))
 
+
 def _set_list_property(self, value, field):
     """Ensures a list is returned for a list property field.
-    
-    This method allows rrule weekdays or lists or tuples of rrule weekdays to 
+
+    This method allows rrule weekdays or lists or tuples of rrule weekdays to
     be passed in as a value. The problem with that is the rrule weekdays aren't
-    serializeable. So, to fix that checks are made to convert the rrule weekdays
-    to integers which jives well with the database.
+    serializeable. So, to fix that checks are made to convert the rrule
+    weekdays to integers which jives well with the database.
     """
     if isinstance(value, weekday):
         value = value.weekday
@@ -39,6 +41,7 @@ def _set_list_property(self, value, field):
                     if isinstance(value, collections.Iterable)
                     else [value],
               field=field)
+
 
 def list_property(field):
     """Property for a field that should be stored as a list."""
@@ -66,10 +69,10 @@ class Recurrence(object):
 
     def __init__(self, freq=None, **kwargs):
         """Frequency must be one of:
-        
-        :param freq: Must be one of: YEARLY (0), MONTHLY (1), WEEKLY (2), 
+
+        :param freq: Must be one of: YEARLY (0), MONTHLY (1), WEEKLY (2),
             DAILY (3), HOURLY (4), MINUTELY (5), or SECONDLY (6)
-            
+
         """
         self._value = {}
 
@@ -97,7 +100,7 @@ class Recurrence(object):
 
 
 class RecurrenceField(JSONField):
-    """Recurrence base off rrule recurrence attributes. This doesn't include 
+    """Recurrence base off rrule recurrence attributes. This doesn't include
     start or end date as those will become top level document params.
     """
 
@@ -113,8 +116,8 @@ class RecurrenceField(JSONField):
             return Recurrence(**v)
         else:
             # TODO: error, incorrectly typed field
-            raise Exception('RecurrenceField should be either a frequency object '
-                            'or a dict. Not {0}'.format(v.__class__))
+            raise Exception('RecurrenceField should be either a frequency '
+                            'object or a dict. Not {0}'.format(v.__class__))
 
     def get_prep_value(self, value):
         if not value:
