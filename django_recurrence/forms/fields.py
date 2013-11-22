@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from django import forms
-from django.core.exceptions import ValidationError
 from django.forms.fields import MultiValueField
-from python_dates.parsers import parse_date
+from dateutil.rrule import WEEKLY, MONTHLY
+
+from django_recurrence.fields import Recurrence
+from django_recurrence.constants import Frequency
+from django_recurrence.forms.choices import FREQUENCY_CHOICES
+from django_recurrence.forms.choices import WEEKDAY_CHOICES
+from python_dates.converters import weekday_to_int
 
 from .choices import FrequencyChoices
 from .widgets import FrequencyWidget
@@ -18,40 +23,80 @@ class FrequencyFormFields(object):
 
 
 class RecurrenceField(MultiValueField):
-
+    """Form field that handles recurrence and returns a
+    django_recurrence.fields.Recurrence field.
+    """
     widget = FrequencyWidget
 
     def __init__(self, *args, **kwargs):
-        kwargs['fields'] = (forms.ChoiceField(choices=FrequencyChoices.ALL),
-                            forms.IntegerField(),
-                            forms.DateField()
-                            )
-        super(RecurrenceField, self).__init__(*args, **kwargs)
-
-    def compress(self, data_list):
-        """
-        Returns a single value for the given list of values. The values can be
-        assumed to be valid.
-
-        For example, if this MultiValueField was instantiated with
-        fields=(DateField(), TimeField()), this might return a datetime
-        object created by combining the date and time in data_list.
-        """
-        return data_list
+        fields = [
+            forms.ChoiceField(choices=FREQUENCY_CHOICES),  # freq
+            forms.MultipleChoiceField(choices=WEEKDAY_CHOICES),  # days of the week
+            forms.IntegerField(),  # num occurrences
+            forms.DateField()  # stop after date
+        ]
+        super(RecurrenceField, self).__init__(fields=fields, *args, **kwargs)
 
     def clean(self, value):
-        if value:
-            if value[0] == FrequencyChoices.NUM_OCCURRENCE:
-                value[2] = ''
-            elif value[0] == FrequencyChoices.STOP_AFTER_DATE:
-                value[1] = ''
-                try:
-                    value[2] = parse_date(value[2])
-                except:
-                    raise ValidationError('Value must be a parsable date.')
-            else:
-                # No recurrence
-                value[1] = value[2] = None
 
-        vals = super(RecurrenceField, self).clean(value)
-        return FrequencyFormFields(*vals) if value else None
+        value.freq = self.fields[0].clean(value.freq)
+
+        try:
+            value.freq = int(value.freq)
+        except:
+            # freq is not an integer, freq will already be correctly set for
+            # the cases where it's a string.
+            pass
+
+        if value.ending in (FrequencyChoices.NUM_OCCURRENCES,
+                            FrequencyChoices.STOP_AFTER_DATE):
+            value.days_of_week = self.fields[1].clean(value.days_of_week)
+
+        if value.ending == FrequencyChoices.NUM_OCCURRENCES:
+            value.num_occurrences = self.fields[2].clean(value.num_occurrences)
+            value.stop_after_date = None
+        elif value.ending == FrequencyChoices.STOP_AFTER_DATE:
+            value.stop_after_date = self.fields[3].clean(value.stop_after_date)
+            value.num_occurrences = None
+        else:
+            # No recurrence
+            return None
+
+        return self.get_recurrence_from_values(values=value)
+
+    def get_recurrence_from_values(self, values):
+        kwargs = {}
+
+        freq = values.freq
+        ending = values.ending
+        days_of_week = values.days_of_week
+
+        if freq == Frequency.ONCE:
+            return kwargs
+
+        # Get the recurrence ending
+        if ending == FrequencyChoices.NUM_OCCURRENCES:
+            kwargs['count'] = values.num_occurrences
+        elif ending == FrequencyChoices.STOP_AFTER_DATE:
+            kwargs['until'] = values.stop_after_date
+
+        # Get the common frequency
+        if freq in (Frequency.DAILY, Frequency.WEEKLY, Frequency.MONTHLY,
+                    Frequency.YEARLY):
+            kwargs['freq'] = freq
+
+        # Get the special cases
+        if freq == Frequency.WEEKLY:
+            kwargs['byweekday'] = [weekday_to_int(day)
+                                   for day in days_of_week] if days_of_week else None
+        elif freq == 'semi_annual':
+            kwargs['freq'] = MONTHLY
+            kwargs['interval'] = 6
+        elif freq == 'every_other_week':
+            kwargs['freq'] = WEEKLY
+            kwargs['interval'] = 2
+        elif freq == 'last_day_of_month':
+            kwargs['freq'] = MONTHLY
+            kwargs['bymonthday'] = -1
+
+        return Recurrence(**kwargs)

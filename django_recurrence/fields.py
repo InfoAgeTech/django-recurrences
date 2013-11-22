@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+import collections
+
 from dateutil.rrule import weekday
 from django_core.fields import JSONField
-import collections
 
 
 def generic_property(field):
@@ -98,6 +99,9 @@ class Recurrence(object):
     def to_dict(self):
         return self._value
 
+    def is_recurring(self):
+        return len(self.to_dict().keys()) > 0
+
 
 class RecurrenceField(JSONField):
     """Recurrence base off rrule recurrence attributes. This doesn't include
@@ -169,3 +173,6 @@ class RecurrenceField(JSONField):
                 rr[field] = val
 
         return rr
+
+    def is_recurring(self):
+        return len(self.to_dict().keys()) > 0

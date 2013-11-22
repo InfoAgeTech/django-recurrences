@@ -131,7 +131,7 @@ class AbstractRecurrence(models.Model):
                                      **kwargs)
 
     def is_recurring(self):
-        return (self.recurrence.to_dict() != {} and
+        return (self.recurrence.is_recurring() and
                 self.start_date != self.end_date)
 
     def get_dates(self):

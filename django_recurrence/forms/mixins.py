@@ -9,6 +9,7 @@ from ..forms.choices import WEEKDAY_CHOICES
 from .fields import RecurrenceField
 
 
+# TODO: This should go away not that I have the RecurrenceField.
 class RecurrenceFormMixin(forms.Form):
 
     freq = forms.ChoiceField(label=_('Repeat'),

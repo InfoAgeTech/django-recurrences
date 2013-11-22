@@ -14,25 +14,31 @@ class RecurrenceManager(models.Manager):
                byweekday=None, byhour=None, byminute=None, bysecond=None,
                **kwargs):
 
-        if freq is FreqChoice.ONCE:
+        recurrence = kwargs.pop('recurrence', None)
+
+        if recurrence:
+            freq = recurrence.freq
+
+        if freq == FreqChoice.ONCE:
             # Not a recurring item
             return super(RecurrenceManager, self).create(start_date=start_date,
                                                          **kwargs)
 
-        recurrence = Recurrence(freq=freq,
-                                interval=interval,
-                                wkst=wkst,
-                                count=count,
-                                bysetpos=bysetpos,
-                                bymonth=bymonth,
-                                bymonthday=bymonthday,
-                                byyearday=byyearday,
-                                byeaster=byeaster,
-                                byweekno=byweekno,
-                                byweekday=byweekday,
-                                byhour=byhour,
-                                byminute=byminute,
-                                bysecond=bysecond)
+        if not recurrence:
+            recurrence = Recurrence(freq=freq,
+                                    interval=interval,
+                                    wkst=wkst,
+                                    count=count,
+                                    bysetpos=bysetpos,
+                                    bymonth=bymonth,
+                                    bymonthday=bymonthday,
+                                    byyearday=byyearday,
+                                    byeaster=byeaster,
+                                    byweekno=byweekno,
+                                    byweekday=byweekday,
+                                    byhour=byhour,
+                                    byminute=byminute,
+                                    bysecond=bysecond)
 
         return super(RecurrenceManager, self).create(start_date=start_date,
                                                      end_date=end_date,
