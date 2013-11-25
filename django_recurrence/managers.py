@@ -19,6 +19,9 @@ class RecurrenceManager(models.Manager):
         if recurrence:
             freq = recurrence.freq
 
+            if not end_date and recurrence.until:
+                end_date = recurrence.until
+
         if freq == FreqChoice.ONCE:
             # Not a recurring item
             return super(RecurrenceManager, self).create(start_date=start_date,
@@ -39,9 +42,6 @@ class RecurrenceManager(models.Manager):
                                     byhour=byhour,
                                     byminute=byminute,
                                     bysecond=bysecond)
-        else:
-            if not end_date and recurrence.until:
-                end_date = recurrence.until
 
         return super(RecurrenceManager, self).create(start_date=start_date,
                                                      end_date=end_date,
