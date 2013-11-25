@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+
 from dateutil.rrule import DAILY
 from dateutil.rrule import WE, TH
 from django.test import TestCase
 from django_recurrence.constants import Frequency
+
 from tests.models import RecurrenceTestModel
 
 
