@@ -39,6 +39,9 @@ class RecurrenceManager(models.Manager):
                                     byhour=byhour,
                                     byminute=byminute,
                                     bysecond=bysecond)
+        else:
+            if not end_date and recurrence.until:
+                end_date = recurrence.until
 
         return super(RecurrenceManager, self).create(start_date=start_date,
                                                      end_date=end_date,
