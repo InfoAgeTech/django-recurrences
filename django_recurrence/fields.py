@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import collections
+from copy import deepcopy
 
+import dateutil.parser
 from dateutil.rrule import weekday
 from django_core.fields import JSONField
 
@@ -13,6 +15,15 @@ def generic_property(field):
                     lambda self, value: self._set(value=value,
                                                   field=field))
 
+
+def datetime_property(field):
+    """Defines the getter and setter for a datetime property.  Still want to be
+    able to set this to a string since I have to convert this field to a string
+    prior to saving.
+    """
+    return property(lambda self: self._get(field=field),
+                    lambda self, value: self._set(value=value,
+                                                  field=field))
 
 def int_property(field):
     """Property for an int field."""
@@ -53,10 +64,12 @@ def list_property(field):
 class Recurrence(object):
     """Represents recurrence for an object."""
 
+    dtstart = datetime_property(field='dtstart')
     freq = int_property(field='freq')
     interval = int_property(field='interval')
     wkst = int_property(field='wkst')
     count = int_property(field='count')
+    until = datetime_property(field='until')
     bysetpos = list_property(field='bysetpos')
     bymonth = list_property(field='bymonth')
     bymonthday = list_property(field='bymonthday')
@@ -77,6 +90,13 @@ class Recurrence(object):
         """
         self._value = {}
 
+        # convert the datetimes to datetime objects
+        for attribute in ('dtstart', 'until'):
+            val = kwargs.get(attribute)
+
+            if isinstance(val, basestring):
+                kwargs[attribute] = dateutil.parser.parse(val)
+
         if freq is not None:
             self.freq = freq
 
@@ -84,7 +104,7 @@ class Recurrence(object):
             if value is not None:
                 setattr(self, field, value)
 
-        return super(Recurrence, self).__init__()
+        super(Recurrence, self).__init__()
 
     def _get(self, field):
         return self._value.get(field)
@@ -97,15 +117,44 @@ class Recurrence(object):
             del self._value[key]
 
     def to_dict(self):
-        return self._value
+        v = deepcopy(self._value)
+
+        # convert the datetimes to datetime object
+        for attribute in ('dtstart', 'until'):
+            val = v.get(attribute)
+
+            if isinstance(val, basestring):
+                v[attribute] = dateutil.parser.parse(val)
+
+        return v
 
     def is_recurring(self):
-        return len(self.to_dict().keys()) > 0
+        """For this object to be recurring, it must contain at least a start
+        date (dtstart) and a frequency (f) and dtstart != until.
+
+        >>> from datetime import datetime
+        >>> now = datetime.now()
+        >>> Recurrence(dtstart=now).is_recurring()
+        False
+        >>> Recurrence(dtstart=now, freq=1).is_recurring()
+        True
+        >>> Recurrence(dtstart=now, until=now).is_recurring()
+        False
+        >>> Recurrence(dtstart=now, count=5).is_recurring()
+        True
+
+        """
+        num_keys = len(self.to_dict().keys())
+
+        if num_keys <= 1 or self.dtstart and self.dtstart == self.until:
+            return False
+
+        return True
 
 
 class RecurrenceField(JSONField):
     """Recurrence base off rrule recurrence attributes. This doesn't include
-    start or end date as those will become top level document params.
+    start as that will become top level document params.
     """
 
     def to_python(self, value):
@@ -127,7 +176,16 @@ class RecurrenceField(JSONField):
         if not value:
             return super(RecurrenceField, self).get_prep_value(None)
 
-        return super(RecurrenceField, self).get_prep_value(value._value)
+        values = deepcopy(value._value)
+
+        # convert the datetimes
+        for attribute in ('dtstart', 'until'):
+            dt = values.get(attribute)
+
+            if hasattr(dt, 'isoformat'):
+                values[attribute] = dt.isoformat()
+
+        return super(RecurrenceField, self).get_prep_value(values)
 
     def save(self, *args, **kwargs):
 

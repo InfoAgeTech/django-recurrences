@@ -10,6 +10,7 @@ from django_recurrence.forms.choices import FREQUENCY_CHOICES
 from django_recurrence.forms.choices import WEEKDAY_CHOICES
 
 from .choices import FrequencyChoices
+from .fields import Recurrence
 
 
 class FrequencyWidgetValues(object):
@@ -54,6 +55,14 @@ class FrequencyWidget(MultiWidget):
             # This was passed a string initial value for the freq. Convert this
             # into a FrequencyWidgetValues object.
             value = FrequencyWidgetValues(freq=value)
+        elif isinstance(value, Recurrence):
+            ending = (FrequencyChoices.NUM_OCCURRENCES if value.count != None
+                      else FrequencyChoices.STOP_AFTER_DATE)
+            value = FrequencyWidgetValues(freq=value.freq,
+                                          stop_after_date=value.until,
+                                          num_occurrences=value.count,
+                                          days_of_week=value.byweekday,
+                                          ending=ending)
 
         # Render the Freq
         freq_html = self.widgets[0].render(

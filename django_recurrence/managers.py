@@ -16,11 +16,19 @@ class RecurrenceManager(models.Manager):
 
         recurrence = kwargs.pop('recurrence', None)
 
+        # TODO: This should go in the model's .save method for a recurrence field
         if recurrence:
             freq = recurrence.freq
 
+            if not start_date and recurrence.dtstart:
+                start_date = recurrence.dtstart
+            elif not recurrence.dtstart and start_date:
+                recurrence.dtstart = start_date
+
             if not end_date and recurrence.until:
                 end_date = recurrence.until
+            elif not recurrence.until and end_date:
+                recurrence.until = end_date
 
         if freq == FreqChoice.ONCE:
             # Not a recurring item
@@ -28,9 +36,11 @@ class RecurrenceManager(models.Manager):
                                                          **kwargs)
 
         if not recurrence:
-            recurrence = Recurrence(freq=freq,
+            recurrence = Recurrence(dtstart=start_date,
+                                    freq=freq,
                                     interval=interval,
                                     wkst=wkst,
+                                    until=end_date,
                                     count=count,
                                     bysetpos=bysetpos,
                                     bymonth=bymonth,

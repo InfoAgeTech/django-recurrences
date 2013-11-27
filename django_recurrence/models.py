@@ -22,11 +22,75 @@ class AbstractRecurrence(models.Model):
     class Meta:
         abstract = True
 
+    def __init__(self, *args, **kwargs):
+
+        if not hasattr(self, 'id') and not args:
+            # New object creation that didn't from from database
+            start_date = kwargs.get('start_date')
+            end_date = kwargs.get('end_date')
+            recurrence = kwargs.get('recurrence')
+
+            # Ensure the start_date, end_date and recurrence are all in sync.
+            # This will ensure if a start or end date is explicitly set that they
+            # are set in the recurrence object as well.
+            if recurrence:
+                if start_date:
+                    if isinstance(recurrence, dict):
+                        recurrence['dtstart'] = start_date
+                    elif hasattr(recurrence, 'dtstart'):
+                        recurrence.dtstart = start_date
+
+                if end_date:
+                    if isinstance(recurrence, dict):
+                        recurrence['until'] = end_date
+                    elif hasattr(recurrence, 'until'):
+                        recurrence.until = end_date
+
+        super(AbstractRecurrence, self).__init__(*args, **kwargs)
+
     def save(self, *args, **kwargs):
+
+        # self.end_date and recurrence.until should always be the same values.
+        # They are denormalized for seachability purposes since recurrence is
+        # just a json field and isn't efficient to query.
+
         if not self.end_date:
-            self.end_date = self.get_dates()[-1]
+            self.end_date = self.get_end_date_from_recurrence()
 
         return super(AbstractRecurrence, self).save(*args, **kwargs)
+
+    def __setattr__(self, name, value):
+        """Check when setting attributes on a recurrence model to make sure
+        and keep the following dates in sync:
+
+        * start_date and recurrence.dtstart
+        * end_date and recurrence.until
+
+        """
+        super(AbstractRecurrence, self).__setattr__(name, value)
+
+        has_recurrence = hasattr(self, 'recurrence') and self.recurrence.is_recurring()
+
+        if name == 'start_date' and has_recurrence:
+
+            if self.recurrence.dtstart != self.start_date:
+                self.recurrence.dtstart = self.start_date
+
+        if name == 'end_date' and has_recurrence:
+
+            if self.recurrence.until != self.end_date:
+                self.recurrence.until = self.end_date
+
+        if name == 'recurrence' and has_recurrence:
+
+            self.start_date = self.recurrence.dtstart
+
+            if self.recurrence.until:
+                self.end_date = self.recurrence.until
+            else:
+                recurrence_end_date = self.get_end_date_from_recurrence()
+                self.recurrence.until = recurrence_end_date
+                self.end_date = recurrence_end_date
 
     def set_recurrence(self, freq, start_date, end_date=None, interval=1,
                        count=None, **kwargs):
@@ -122,28 +186,26 @@ class AbstractRecurrence(models.Model):
 
         @see http://labix.org/python-dateutil#head-470fa22b2db72000d7abe698a5783a46b0731b57
         """
-        self.start_date = start_date
-        self.end_date = end_date
-
-        self.recurrence = Recurrence(freq=freq,
+        self.recurrence = Recurrence(dtstart=start_date,
+                                     until=end_date,
+                                     freq=freq,
                                      interval=interval,
                                      count=count,
                                      **kwargs)
 
     def is_recurring(self):
-        return (self.recurrence.is_recurring() and
-                self.start_date != self.end_date)
+        return getattr(self, 'recurrence') and self.recurrence.is_recurring()
 
     def get_dates(self):
         """Gets the dates for the frequency using rrule."""
+        if not self.is_recurring():
+            return [self.start_date]
+
         frequency = self.recurrence.to_dict()
+        return list(rrule(**frequency))
 
-        if frequency:
-            return list(rrule(dtstart=self.start_date,
-                              until=self.end_date,
-                              **frequency))
-
-        return [self.start_date]
+    def get_end_date_from_recurrence(self):
+        return self.get_dates()[-1]
 
     def recurrence_str(self):
         """

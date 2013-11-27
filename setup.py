@@ -14,7 +14,7 @@ classifiers = [
     'Programming Language :: Python',
     'Programming Language :: Python :: 2.7',
     'Topic :: Internet :: WWW/HTTP',
-    'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+    'Topic :: Internet :: WWW/HTTP :: Dynamic Content'
 ]
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
