@@ -4,3 +4,4 @@
 .settings/
 *.pyc
 *.db
+/.coverage
