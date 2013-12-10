@@ -27,7 +27,7 @@ INSTALLED_APPS = (
     'django_recurrence',
     'django_nose',
     'python_dates',
-    'tests',  # adding as an installed app so testing models get picked up.
+    'test_models',  # adding as an installed app so testing models get picked up.
 )
 
 # Added in django 1.5 secret key is required.  This is a random generated string
@@ -43,6 +43,6 @@ here = lambda *x: os.path.join(os.path.abspath(os.path.dirname(__file__)), *x)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': here('django_recurrence.db')
+        'NAME': here('test_db.db')
     }
 }

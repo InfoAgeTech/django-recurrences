@@ -7,7 +7,7 @@ from django.test import TestCase
 from django_recurrence.constants import Frequency
 from django_recurrence.fields import Recurrence
 
-from tests.models import RecurrenceTestModel
+from .test_models.models import RecurrenceTestModel
 
 
 class FieldTests(TestCase):
