@@ -1,17 +1,15 @@
 NOTE: This is not stable yet and will likely change!  Please don't use in
 production until the 1.0 release.
 
-=================
-django-recurrence
-=================
-django-recurrence is a python recurrence module written for django.
-
-Build Status
-============
-.. image:: https://travis-ci.org/InfoAgeTech/django-recurrence.png?branch=master
+.. |travisci| image:: https://travis-ci.org/InfoAgeTech/django-recurrence.png?branch=master
   :target: http://travis-ci.org/InfoAgeTech/django-recurrence
-.. image:: https://coveralls.io/repos/InfoAgeTech/django-recurrence/badge.png?branch=master
+.. |coveralls| image:: https://coveralls.io/repos/InfoAgeTech/django-recurrence/badge.png?branch=master
   :target: https://coveralls.io/r/InfoAgeTech/django-recurrence
+
+========================================
+django-recurrence |travisci| |coveralls|
+========================================
+django-recurrence is a python recurrence module written for django.
 
 Intallation
 ===========
