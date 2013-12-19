@@ -83,7 +83,8 @@ class AbstractRecurrence(models.Model):
 
         if name == 'recurrence' and has_recurrence:
 
-            self.start_date = self.recurrence.dtstart
+            if self.recurrence.dtstart:
+                self.start_date = self.recurrence.dtstart
 
             if self.recurrence.until:
                 self.end_date = self.recurrence.until
