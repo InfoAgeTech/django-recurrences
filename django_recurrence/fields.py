@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import dateutil.parser
 from dateutil.rrule import weekday
-from django_core.fields import JSONField
+from django_core.models.fields import JSONField
 
 
 def generic_property(field):
