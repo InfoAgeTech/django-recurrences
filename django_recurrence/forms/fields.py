@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
+from dateutil.rrule import MONTHLY
+from dateutil.rrule import WEEKLY
 from django import forms
 from django.forms.fields import MultiValueField
-from dateutil.rrule import WEEKLY, MONTHLY
-
-from django_recurrence.fields import Recurrence
-from django_recurrence.constants import Frequency
-from django_recurrence.forms.choices import FREQUENCY_CHOICES
-from django_recurrence.forms.choices import WEEKDAY_CHOICES
 from python_dates.converters import weekday_to_int
 
+from ..constants import Frequency
+from ..fields import Recurrence
+from ..forms.choices import FREQUENCY_CHOICES
+from ..forms.choices import WEEKDAY_CHOICES
 from .choices import FrequencyChoices
 from .widgets import FrequencyWidget
 
