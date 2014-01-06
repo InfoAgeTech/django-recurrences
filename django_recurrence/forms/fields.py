@@ -31,8 +31,8 @@ class RecurrenceField(MultiValueField):
     def __init__(self, *args, **kwargs):
         fields = [
             forms.ChoiceField(choices=FREQUENCY_CHOICES),  # freq
-            forms.MultipleChoiceField(choices=WEEKDAY_CHOICES),  # days of the week
-            forms.IntegerField(),  # num occurrences
+            forms.MultipleChoiceField(choices=WEEKDAY_CHOICES),  # days of week
+            forms.IntegerField(min_value=1),  # num occurrences
             forms.DateField()  # stop after date
         ]
         super(RecurrenceField, self).__init__(fields=fields, *args, **kwargs)
@@ -47,6 +47,15 @@ class RecurrenceField(MultiValueField):
             # freq is not an integer, freq will already be correctly set for
             # the cases where it's a string.
             pass
+
+        if value.ending == None:
+            # There's no ending set. If either num_occurences or
+            # stop_after_date has a value != None (only 1 is set) then make
+            # sure the ending is set to appropriate appropriately.
+            if not value.stop_after_date and value.num_occurrences:
+                value.ending = FrequencyChoices.NUM_OCCURRENCES
+            elif not value.num_occurrences and value.stop_after_date:
+                value.ending = FrequencyChoices.STOP_AFTER_DATE
 
         if value.ending in (FrequencyChoices.NUM_OCCURRENCES,
                             FrequencyChoices.STOP_AFTER_DATE):
