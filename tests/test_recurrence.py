@@ -18,17 +18,18 @@ class FieldTests(TestCase):
         utcnow = datetime.utcnow()
         interval = 2
         count = 5
-        tm = RecurrenceTestModel(start_date=utcnow,
-                                 recurrence={'freq': DAILY,
-                                             'interval': interval,
-                                             'count': count})
+        tm = RecurrenceTestModel()
+        tm.set_recurrence(start_date=utcnow,
+                          freq=DAILY,
+                          interval=interval,
+                          count=count)
         tm.save()
 
         tm = RecurrenceTestModel.objects.get(id=tm.id)
 
-        self.assertEqual(tm.recurrence.freq, DAILY)
-        self.assertEqual(tm.recurrence.interval, interval)
-        self.assertEqual(tm.recurrence.count, count)
+        self.assertEqual(tm.freq, DAILY)
+        self.assertEqual(tm.interval, interval)
+        self.assertEqual(tm.count, count)
         self.assertEqual(tm.start_date, utcnow)
 
     def test_get_dates(self):
@@ -39,7 +40,7 @@ class FieldTests(TestCase):
 
         tm = RecurrenceTestModel(start_date=datetime(2011, 1, 1),
                                  end_date=datetime(2011, 1, 3),
-                                 recurrence={'freq': DAILY})
+                                 freq=DAILY)
         dates = tm.get_dates()
 
         self.assertEqual(actual_dates, dates)
@@ -59,19 +60,19 @@ class FieldTests(TestCase):
         """Test that the model returns the correct start date from the
         database.
         """
-        utcnow = datetime.utcnow()
-        tm = RecurrenceTestModel(start_date=utcnow)
+        dt = datetime(2013, 1, 15)
+        tm = RecurrenceTestModel(start_date=dt)
         tm.save()
 
         tm = RecurrenceTestModel.objects.get(id=tm.id)
-        self.assertEqual(tm.start_date, utcnow)
-        self.assertEqual(tm.end_date, utcnow)
+        self.assertEqual(tm.start_date, dt)
+        self.assertEqual(tm.end_date, dt)
 
     def test_is_recurring(self):
         """Test for object that is recurring."""
         tm = RecurrenceTestModel(start_date=datetime(2011, 1, 1),
                                  end_date=datetime(2011, 1, 3),
-                                 recurrence={'freq': DAILY})
+                                 freq=DAILY)
         self.assertTrue(tm.is_recurring())
 
     def test_is_not_recurring(self):
@@ -162,6 +163,24 @@ class RecurrenceManagerTests(TestCase):
         self.assertEqual(tm.get_dates(), self.dates)
         self.assertEqual(tm.end_date, end_date)
 
+    def test_create_recurrence_by_count_yearly(self):
+        """Test for creating a recurring object by count with yearly frequency.
+        """
+        start_date = datetime(2013, 1, 1)
+        end_date = datetime(2015, 1, 1)
+        count = 3
+        tm = RecurrenceTestModel.objects.create(start_date=start_date,
+                                                freq=Frequency.YEARLY,
+                                                count=count)
+        self.assertTrue(tm.is_recurring())
+
+        dates = tm.get_dates()
+        self.assertEqual(len(dates), 3)
+        self.assertEqual(tm.start_date, start_date)
+        self.assertEqual(dates[0], start_date)
+        self.assertEqual(tm.end_date, end_date)
+        self.assertEqual(dates[-1], end_date)
+
     def test_create_recurrence_by_weekday_int(self):
         """Create recurrence by a integer weekday."""
         start_date = self.dates[0]
@@ -169,7 +188,7 @@ class RecurrenceManagerTests(TestCase):
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
                                                 end_date=end_date,
                                                 freq=Frequency.DAILY,
-                                                byweekday=4)
+                                                byweekday=[4])
         dates = tm.get_dates()
 
         self.assertTrue(tm.is_recurring())
@@ -200,7 +219,7 @@ class RecurrenceManagerTests(TestCase):
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
                                                 end_date=end_date,
                                                 freq=Frequency.DAILY,
-                                                byweekday=TH)
+                                                byweekday=[TH.weekday])
         dates = tm.get_dates()
 
         self.assertTrue(tm.is_recurring())
@@ -215,7 +234,8 @@ class RecurrenceManagerTests(TestCase):
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
                                                 end_date=end_date,
                                                 freq=Frequency.DAILY,
-                                                byweekday=[WE, TH])
+                                                byweekday=[WE.weekday,
+                                                           TH.weekday])
         dates = tm.get_dates()
 
         self.assertTrue(tm.is_recurring())
@@ -247,12 +267,12 @@ class RecurrenceManagerTests(TestCase):
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
                                                 freq=Frequency.DAILY,
                                                 end_date=end_date)
-        self.assertEqual(tm.start_date, tm.recurrence.dtstart)
-        self.assertEqual(tm.end_date, tm.recurrence.until)
+        self.assertEqual(tm.start_date, tm.dtstart)
+        self.assertEqual(tm.end_date, tm.until)
 
         tm.start_date = changed_start_date
-        self.assertEqual(tm.start_date, tm.recurrence.dtstart)
-        self.assertEqual(tm.end_date, tm.recurrence.until)
+        self.assertEqual(tm.start_date, tm.dtstart)
+        self.assertEqual(tm.end_date, tm.until)
 
     def test_end_date_change(self):
         """Test when the start_date changes, the recurrence object also changes
@@ -264,12 +284,12 @@ class RecurrenceManagerTests(TestCase):
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
                                                 freq=Frequency.DAILY,
                                                 end_date=end_date)
-        self.assertEqual(tm.start_date, tm.recurrence.dtstart)
-        self.assertEqual(tm.end_date, tm.recurrence.until)
+        self.assertEqual(tm.start_date, tm.dtstart)
+        self.assertEqual(tm.end_date, tm.until)
 
         tm.end_date = changed_end_date
-        self.assertEqual(tm.start_date, tm.recurrence.dtstart)
-        self.assertEqual(tm.end_date, tm.recurrence.until)
+        self.assertEqual(tm.start_date, tm.dtstart)
+        self.assertEqual(tm.end_date, tm.until)
 
     def test_recurrence_change(self):
         """Test the correct start and end dates when the recurrence object
@@ -285,14 +305,14 @@ class RecurrenceManagerTests(TestCase):
         changed_start_date = datetime(2013, 5, 1)
         changed_end_date = datetime(2013, 5, 5)
 
-        tm.recurrence = Recurrence(freq=1, dtstart=changed_start_date,
-                                   until=changed_end_date)
+        tm.set_recurrence(freq=1, start_date=changed_start_date,
+                          end_date=changed_end_date)
 
         self.assertEqual(tm.start_date, changed_start_date)
-        self.assertEqual(tm.recurrence.dtstart, changed_start_date)
+        self.assertEqual(tm.dtstart, changed_start_date)
 
         self.assertEqual(tm.end_date, changed_end_date)
-        self.assertEqual(tm.recurrence.until, changed_end_date)
+        self.assertEqual(tm.until, changed_end_date)
 
     def test_set_recurrence_with_dates(self):
         """Test the the set_recurrence method to ensure correct start and end
@@ -311,10 +331,10 @@ class RecurrenceManagerTests(TestCase):
                           end_date=changed_end_date)
 
         self.assertEqual(tm.start_date, changed_start_date)
-        self.assertEqual(tm.recurrence.dtstart, changed_start_date)
+        self.assertEqual(tm.dtstart, changed_start_date)
 
         self.assertEqual(tm.end_date, changed_end_date)
-        self.assertEqual(tm.recurrence.until, changed_end_date)
+        self.assertEqual(tm.until, changed_end_date)
 
     def test_set_recurrence_with_count(self):
         """Test the the set_recurrence method to ensure correct start and end
@@ -332,7 +352,7 @@ class RecurrenceManagerTests(TestCase):
         tm.set_recurrence(freq=DAILY, start_date=changed_start_date, count=6)
 
         self.assertEqual(tm.start_date, changed_start_date)
-        self.assertEqual(tm.recurrence.dtstart, changed_start_date)
+        self.assertEqual(tm.dtstart, changed_start_date)
 
         self.assertEqual(tm.end_date, expected_end_date)
-        self.assertEqual(tm.recurrence.until, expected_end_date)
+        self.assertEqual(tm.until, expected_end_date)

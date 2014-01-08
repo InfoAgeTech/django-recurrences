@@ -3,95 +3,90 @@
 from dateutil.rrule import rrule
 from django.db import models
 from django.utils.translation import ugettext as _
+from django_core.models.fields import IntegerListField
 from python_dates.converters import int_to_weekday
 
+from .constants import Day
 from .constants import Frequency
-from .fields import Recurrence
-from .fields import RecurrenceField
+from .constants import Month
 from .managers import RecurrenceManager
 
 
-class AbstractRecurrence(models.Model):
-    """A model mixin for recurrence."""
+# Choices as defined in http://www.ietf.org/rfc/rfc2445.txt
+ONE_TO_31 = tuple((x, x) for x in range(32))  # Month days
+ONE_TO_53 = tuple((x, x) for x in range(54))  # Week numbers
+ONE_TO_366 = tuple((x, x) for x in range(367))  # Days in year (366 leap year)
+ZERO_TO_23 = tuple((x, x) for x in range(24))  # Hours
+ZERO_TO_59 = tuple((x, x) for x in range(60))  # Seconds, Minutes
+BY_SET_POS_CHOICES = Day.CHOICES + ((-1, -1),)
+
+
+class AbstractRecurrenceModelMixin(models.Model):
+    """A model mixin for recurrence.
+
+    For rules see:
+
+    * http://www.ietf.org/rfc/rfc2445.txt
+    * http://labix.org/python-dateutil#head-cf004ee9a75592797e076752b2a889c10f445418
+    """
 
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(blank=True, null=True)
-    recurrence = RecurrenceField(blank=True, null=True)
+
+    # Recurrence Rule fields
+    freq = models.PositiveIntegerField(choices=Frequency.CHOICES, blank=True,
+                                       null=True)
+    interval = models.PositiveIntegerField(default=1, blank=True, null=True)
+    wkst = models.PositiveIntegerField(choices=Day.CHOICES, blank=True,
+                                       null=True)
+    count = models.PositiveIntegerField(blank=True, null=True)
+    bysetpos = IntegerListField(choices=BY_SET_POS_CHOICES, max_length=25,
+                                blank=True, null=True)
+    bymonth = IntegerListField(choices=Month.CHOICES, max_length=25,
+                               blank=True, null=True)
+    bymonthday = IntegerListField(choices=ONE_TO_31, max_length=200,
+                                  blank=True, null=True)
+    byyearday = IntegerListField(choices=ONE_TO_366, max_length=1500,
+                                 blank=True, null=True)
+    byweekno = IntegerListField(choices=ONE_TO_53, max_length=200,
+                                blank=True, null=True)
+    byweekday = IntegerListField(choices=Day.CHOICES, max_length=25,
+                                 blank=True, null=True)
+    byhour = IntegerListField(choices=ZERO_TO_59, max_length=200,
+                              blank=True, null=True)
+    byminute = IntegerListField(choices=ZERO_TO_59, max_length=200,
+                                blank=True, null=True)
+    bysecond = IntegerListField(choices=ZERO_TO_59, max_length=200,
+                                blank=True, null=True)
+    byeaster = IntegerListField(max_length=100, blank=True, null=True)
+
     objects = RecurrenceManager()
 
     class Meta:
         abstract = True
 
-    def __init__(self, *args, **kwargs):
+    @property
+    def dtstart(self):
+        return self.start_date
 
-        if not hasattr(self, 'id') and not args:
-            # New object creation that didn't from from database
-            start_date = kwargs.get('start_date')
-            end_date = kwargs.get('end_date')
-            recurrence = kwargs.get('recurrence')
+    @dtstart.setter
+    def dtstart(self, value):
+        self.start_date = value
 
-            # Ensure the start_date, end_date and recurrence are all in sync.
-            # This will ensure if a start or end date is explicitly set that they
-            # are set in the recurrence object as well.
-            if recurrence:
-                if start_date:
-                    if isinstance(recurrence, dict):
-                        recurrence['dtstart'] = start_date
-                    elif hasattr(recurrence, 'dtstart'):
-                        recurrence.dtstart = start_date
+    @property
+    def until(self):
+        return self.end_date
 
-                if end_date:
-                    if isinstance(recurrence, dict):
-                        recurrence['until'] = end_date
-                    elif hasattr(recurrence, 'until'):
-                        recurrence.until = end_date
-
-        super(AbstractRecurrence, self).__init__(*args, **kwargs)
+    @until.setter
+    def until(self, value):
+        self.end_date = value
 
     def save(self, *args, **kwargs):
-
-        # self.end_date and recurrence.until should always be the same values.
-        # They are denormalized for seachability purposes since recurrence is
-        # just a json field and isn't efficient to query.
 
         if not self.end_date:
             self.end_date = self.get_end_date_from_recurrence()
 
-        return super(AbstractRecurrence, self).save(*args, **kwargs)
-
-    def __setattr__(self, name, value):
-        """Check when setting attributes on a recurrence model to make sure
-        and keep the following dates in sync:
-
-        * start_date and recurrence.dtstart
-        * end_date and recurrence.until
-
-        """
-        super(AbstractRecurrence, self).__setattr__(name, value)
-
-        has_recurrence = hasattr(self, 'recurrence') and self.recurrence.is_recurring()
-
-        if name == 'start_date' and has_recurrence:
-
-            if self.recurrence.dtstart != self.start_date:
-                self.recurrence.dtstart = self.start_date
-
-        if name == 'end_date' and has_recurrence:
-
-            if self.recurrence.until != self.end_date:
-                self.recurrence.until = self.end_date
-
-        if name == 'recurrence' and has_recurrence:
-
-            if self.recurrence.dtstart:
-                self.start_date = self.recurrence.dtstart
-
-            if self.recurrence.until:
-                self.end_date = self.recurrence.until
-            else:
-                recurrence_end_date = self.get_end_date_from_recurrence()
-                self.recurrence.until = recurrence_end_date
-                self.end_date = recurrence_end_date
+        return super(AbstractRecurrenceModelMixin, self).save(*args, **kwargs)
 
     def set_recurrence(self, freq, start_date, end_date=None, interval=1,
                        count=None, **kwargs):
@@ -187,23 +182,73 @@ class AbstractRecurrence(models.Model):
 
         @see http://labix.org/python-dateutil#head-470fa22b2db72000d7abe698a5783a46b0731b57
         """
-        self.recurrence = Recurrence(dtstart=start_date,
-                                     until=end_date,
-                                     freq=freq,
-                                     interval=interval,
-                                     count=count,
-                                     **kwargs)
+        # Set or reset all recurrence fields
+        exclude_fields = ['dtstart', 'until', 'freq', 'interval', 'count']
+        for field in self.get_recurrence_field_names(exclude_fields):
+            setattr(self, field, kwargs.get(field))
+
+        self.freq = freq
+        self.start_date = start_date
+        self.interval = interval
+        self.count = count
+
+        if end_date:
+            self.end_date = end_date
+        else:
+            # First set the end_date to None to correctly calculate the new
+            # end date.
+            self.end_date = end_date
+            self.end_date = self.get_end_date_from_recurrence()
+
+    def get_recurrence(self):
+        """Returns a dict of all the recurrence fields that have a value."""
+        recurrence = {}
+        for field in self.get_recurrence_field_names():
+            val = getattr(self, field, None)
+            if val != None:
+                recurrence[field] = val
+
+        return recurrence
+
+    def get_recurrence_field_names(self, exclude_fields=None):
+        """Gets all the recurrence field names as define by:
+
+        * http://www.ietf.org/rfc/rfc2445.txt
+        * http://labix.org/python-dateutil#head-cf004ee9a75592797e076752b2a889c10f445418
+
+        :params exclude_fields: list of fields to exclude.
+        """
+        if not exclude_fields:
+            exclude_fields = []
+
+        fields = ['dtstart', 'until', 'freq', 'interval', 'wkst', 'count',
+                 'bysetpos', ' bymonth', 'bymonthday', 'byyearday', 'byeaster',
+                 'byweekno', 'byweekday', 'byhour', 'byminute', 'bysecond']
+        return [field_name for field_name in fields
+                if field_name not in exclude_fields]
 
     def is_recurring(self):
-        return getattr(self, 'recurrence') and self.recurrence.is_recurring()
+        """Boolean indicating if the object is recurring."""
+        recurrence = self.get_recurrence()
+
+        if (not self.start_date or
+            (self.start_date == self.end_date) or
+            ('until' not in recurrence and 'count' not in recurrence)):
+            # Must have a start and an end or there's no recurrence. An end can
+            # also be a count because there's a defined number of occurrences.
+            return False
+
+        return True
 
     def get_dates(self):
         """Gets the dates for the frequency using rrule."""
         if not self.is_recurring():
             return [self.start_date]
 
-        frequency = self.recurrence.to_dict()
-        return list(rrule(**frequency))
+        try:
+            return list(rrule(**self.get_recurrence()))
+        except Exception as e:
+            return [self.start_date]
 
     def get_end_date_from_recurrence(self):
         return self.get_dates()[-1]
@@ -256,29 +301,34 @@ class AbstractRecurrence(models.Model):
                 if i == 0 and len(days) == 1:
                     weekday_str += u' '
 
-                if i < len(days) - 2: weekday_str += u', '
-                elif i == len(days) - 2: weekday_str += u' and '
+                if i < len(days) - 2:
+                    weekday_str += u', '
+                elif i == len(days) - 2:
+                    weekday_str += u' and '
 
             return weekday_str
 
         date_format = '%b %d, %Y'
 
-        if self.recurrence.count:
-            to_from = _('Starting {0} occurring {1} times').format(self.start_date.strftime(date_format),
-                                                                   self.recurrence.count)
+        if self.count:
+            to_from = _('Starting {0} occurring {1} times').format(
+                                        self.start_date.strftime(date_format),
+                                        self.count)
         elif self.is_recurring:
-            to_from = u'{0} - {1}'.format(self.start_date.strftime(date_format),
-                                          self.end_date.strftime(date_format))
+            to_from = u'{0} - {1}'.format(
+                                        self.start_date.strftime(date_format),
+                                        self.end_date.strftime(date_format))
         else:
             to_from = u''
 
-        freq = self.recurrence.freq
+        freq = self.freq
         if freq == Frequency.YEARLY:
             frequency = u'Every year'
         elif freq == Frequency.MONTHLY:
             frequency = u'Every month'
         elif freq == Frequency.WEEKLY:
-            weekday_str = _get_weekday_str(self.recurrence.byweekday) if self.recurrence.byweekday else u'week'
+            weekday_str = _get_weekday_str(self.byweekday) \
+                          if self.byweekday else u'week'
             frequency = u'Every {0}'.format(weekday_str)
         elif freq == Frequency.DAILY:
             frequency = u'Everyday'

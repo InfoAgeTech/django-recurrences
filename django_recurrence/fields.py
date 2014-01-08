@@ -104,7 +104,7 @@ class Recurrence(object):
             if value is not None:
                 setattr(self, field, value)
 
-        super(Recurrence, self).__init__(**kwargs)
+        super(Recurrence, self).__init__()
 
     def _get(self, field):
         return self._value.get(field)
