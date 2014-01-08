@@ -1,4 +1,2 @@
-django
-python-dateutil==1.5
-https://github.com/InfoAgeTech/django-tools/tarball/master
+https://github.com/InfoAgeTech/django-core/tarball/master
 https://github.com/InfoAgeTech/python-dates/tarball/master

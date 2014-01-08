@@ -35,7 +35,7 @@ setup(
     tests_require=['nose'],
     setup_requires=[
         'django >= 1.5.5',
-        'python-dateutil == 1.5',
+        'python-dateutil>=1.5',
     ],
     classifiers=classifiers
 )
