@@ -4,12 +4,13 @@ from django.forms import widgets
 from django.forms.widgets import MultiWidget
 from django.forms.widgets import NumberInput
 from django.utils.safestring import mark_safe
+from django.utils.six import string_types
 from django.utils.translation import ugettext as _
 from django_forms.html5.widgets import Html5DateInput
-from django_recurrence.forms.choices import FREQUENCY_CHOICES
-from django_recurrence.forms.choices import WEEKDAY_CHOICES
 
+from .choices import FREQUENCY_CHOICES
 from .choices import FrequencyChoices
+from .choices import WEEKDAY_CHOICES
 from .fields import Recurrence
 
 
@@ -51,7 +52,7 @@ class FrequencyWidget(MultiWidget):
                                                               FrequencyChoices.STOP_AFTER_DATE)))
 
     def render(self, name, value, attrs=None):
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             # This was passed a string initial value for the freq. Convert this
             # into a FrequencyWidgetValues object.
             value = FrequencyWidgetValues(freq=value)

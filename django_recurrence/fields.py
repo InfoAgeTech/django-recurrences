@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import dateutil.parser
 from dateutil.rrule import weekday
+from django.utils.six import string_types
 from django_core.models.fields import JSONField
 
 
@@ -24,6 +25,7 @@ def datetime_property(field):
     return property(lambda self: self._get(field=field),
                     lambda self, value: self._set(value=value,
                                                   field=field))
+
 
 def int_property(field):
     """Property for an int field."""
@@ -94,7 +96,7 @@ class Recurrence(object):
         for attribute in ('dtstart', 'until'):
             val = kwargs.get(attribute)
 
-            if isinstance(val, basestring):
+            if isinstance(val, string_types):
                 kwargs[attribute] = dateutil.parser.parse(val)
 
         if freq is not None:
@@ -123,7 +125,7 @@ class Recurrence(object):
         for attribute in ('dtstart', 'until'):
             val = v.get(attribute)
 
-            if isinstance(val, basestring):
+            if isinstance(val, string_types):
                 v[attribute] = dateutil.parser.parse(val)
 
         return v

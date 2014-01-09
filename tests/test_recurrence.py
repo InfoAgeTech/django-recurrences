@@ -108,7 +108,7 @@ class FieldTests(TestCase):
         tm = RecurrenceTestModel.objects.create(start_date=start_date,
                                                 end_date=end_date,
                                                 freq=Frequency.DAILY)
-        self.assertEquals(tm.recurrence_str(),
+        self.assertEqual(tm.recurrence_str(),
                           u'Everyday, Nov 21, 2011 - Nov 25, 2011')
 
         tm.set_recurrence(start_date=start_date,
@@ -117,7 +117,7 @@ class FieldTests(TestCase):
                           byweekday=[0, 2, 4])
         tm.save()
 
-        self.assertEquals(tm.recurrence_str(),
+        self.assertEqual(tm.recurrence_str(),
                           u'Every Monday, Wednesday and Friday, Nov 21, 2011 - Dec 02, 2011')
 
 
