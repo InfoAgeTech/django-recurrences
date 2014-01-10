@@ -146,7 +146,7 @@ class Recurrence(object):
         True
 
         """
-        num_keys = len(self.to_dict().keys())
+        num_keys = len(list(self.to_dict().keys()))
 
         if num_keys <= 1 or self.dtstart and self.dtstart == self.until:
             return False
