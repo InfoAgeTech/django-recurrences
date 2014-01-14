@@ -3,7 +3,6 @@ import collections
 from datetime import date
 from datetime import datetime
 
-import dateutil.parser
 from dateutil.rrule import weekday
 from django.utils.six import string_types
 from django_core.models.fields import JSONField
