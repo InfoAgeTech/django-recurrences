@@ -5,7 +5,7 @@ from dateutil.rrule import DAILY
 from dateutil.rrule import WE, TH
 from django.test import TestCase
 from django_recurrence.constants import Frequency
-from django_recurrence.fields import Recurrence
+from django_recurrence.rrule import Recurrence
 
 from .test_models.models import RecurrenceTestModel
 

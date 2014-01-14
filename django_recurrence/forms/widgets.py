@@ -9,11 +9,11 @@ from django.utils.safestring import mark_safe
 from django.utils.six import string_types
 from django.utils.translation import ugettext as _
 from django_core.forms.widgets import Html5DateInput
+from django_recurrence.rrule import Recurrence
 
 from .choices import FREQUENCY_CHOICES
 from .choices import FrequencyChoices
 from .choices import WEEKDAY_CHOICES
-from .fields import Recurrence
 
 
 class FrequencyWidgetValues(object):

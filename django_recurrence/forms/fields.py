@@ -7,9 +7,9 @@ from django.forms.fields import MultiValueField
 from python_dates.converters import weekday_to_int
 
 from ..constants import Frequency
-from ..fields import Recurrence
 from ..forms.choices import FREQUENCY_CHOICES
 from ..forms.choices import WEEKDAY_CHOICES
+from ..rrule import Recurrence
 from .choices import FrequencyChoices
 from .widgets import FrequencyWidget
 
@@ -20,8 +20,6 @@ from .widgets import FrequencyWidget
 #         self.ending = ending
 #         self.num_occurrence = num_occurrence
 #         self.end_date = end_date
-
-
 class RecurrenceField(MultiValueField):
     """Form field that handles recurrence and returns a
     django_recurrence.fields.Recurrence field.
