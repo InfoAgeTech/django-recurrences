@@ -33,13 +33,10 @@ setup(
     zip_safe=False,
     test_suite='nose.collector',
     tests_require=[
-        'django_nose',
-        'https://github.com/InfoAgeTech/django-testing/tarball/master'
+        'django_nose'
     ],
     install_requires=[
-        'python-dateutil>=1.5',
-        'https://github.com/InfoAgeTech/django-core/tarball/master',
-        'https://github.com/InfoAgeTech/python-dates/tarball/master'
+        'python-dateutil>=1.5'
     ],
     setup_requires=[
         'django >= 1.5.5',
