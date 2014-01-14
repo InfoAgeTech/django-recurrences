@@ -12,13 +12,66 @@ from .constants import Month
 from .managers import RecurrenceManager
 
 
+def _base_choices(vals, reverse=False):
+    if reverse:
+        return tuple(sorted(vals, key=lambda k:-k[0]))
+
+    return vals
+
+
+def _zero_to_num(num, **kwargs):
+    """Return zero to num in a tuple of tuples.  Num is inclusive.
+
+    >>> _zero_to_num(2)
+    ((0, 0), (1, 1), (2, 2))
+
+    """
+    num += 1
+    vals = tuple((x, x) for x in range(num))
+    return _base_choices(vals, **kwargs)
+
+
+def _one_to_num(num, **kwargs):
+    vals = tuple((x + 1, x + 1) for x in range(num))
+    return _base_choices(vals, **kwargs)
+
+
+def _neg_num_to_zero(num, **kwargs):
+    num -= 1
+    vals = tuple((-x, -x) for x in range(abs(num)))
+    return _base_choices(vals, **kwargs)
+
+
+def _neg_num_to_neg_one(num, **kwargs):
+    vals = tuple((-(x + 1), -(x + 1)) for x in range(abs(num)))
+    return _base_choices(vals, **kwargs)
+
+
 # Choices as defined in http://www.ietf.org/rfc/rfc2445.txt
-ONE_TO_31 = tuple((x, x) for x in range(32))  # Month days
-ONE_TO_53 = tuple((x, x) for x in range(54))  # Week numbers
-ONE_TO_366 = tuple((x, x) for x in range(367))  # Days in year (366 leap year)
-ZERO_TO_23 = tuple((x, x) for x in range(24))  # Hours
-ZERO_TO_59 = tuple((x, x) for x in range(60))  # Seconds, Minutes
+ONE_TO_31 = _one_to_num(31)  # Month days
+ONE_TO_53 = _one_to_num(53)  # Week numbers
+ONE_TO_366 = _one_to_num(366)  # Days in year (366 leap year)
+NEG_23_TO_NEG_1 = _neg_num_to_neg_one(-23)
+NEG_31_TO_NEG_1 = _neg_num_to_neg_one(-31)
+NEG_53_TO_NEG_1 = _neg_num_to_neg_one(-53)
+NEG_59_TO_NEG_1 = _neg_num_to_neg_one(-59)
+NEG_366_TO_NEG_1 = _neg_num_to_neg_one(-366)
+ZERO_TO_23 = _zero_to_num(23)  # Hours
+ZERO_TO_59 = _zero_to_num(59)  # Seconds, Minutes
+
 BY_SET_POS_CHOICES = Day.CHOICES + ((-1, -1),)
+BY_MONTH_DAY_CHOICES = ONE_TO_31 + NEG_31_TO_NEG_1
+BY_YEAR_DAY_CHOICES = ONE_TO_366 + NEG_366_TO_NEG_1
+BY_MONTH_DAY_HELP_TEXT = _('Comma separated list of month days to apply the '
+                           'recurrence to. A value of "1, 15" would be the '
+                           '1st and 15th of every month. If you want the '
+                           'last day of the month, use the value -1 in your '
+                           'list, second to last day -2 and so fourth.')
+BY_YEAR_DAY_HELP_TEXT = _('Comma separated list of year days to apply the '
+                          'recurrence to. A value of "1, 300" would be the '
+                          '1st and 300th day of the year. If you want the '
+                          'last day of the year, use the value -1 in your '
+                          'list, second to last day -2 and so fourth.')
 
 
 class AbstractRecurrenceModelMixin(models.Model):
@@ -39,26 +92,36 @@ class AbstractRecurrenceModelMixin(models.Model):
     interval = models.PositiveIntegerField(default=1, blank=True, null=True)
     wkst = models.PositiveIntegerField(choices=Day.CHOICES, blank=True,
                                        null=True)
-    count = models.PositiveIntegerField(blank=True, null=True)
-    bysetpos = IntegerListField(choices=BY_SET_POS_CHOICES, max_length=25,
+    count = models.PositiveIntegerField(verbose_name=_('Total Occurrences'),
+                                        blank=True, null=True)
+    bysetpos = IntegerListField(verbose_name=_('By Set Position'),
+                                choices=BY_SET_POS_CHOICES, max_length=25,
                                 blank=True, null=True)
-    bymonth = IntegerListField(choices=Month.CHOICES, max_length=25,
+    bymonth = IntegerListField(verbose_name=_('By Month'),
+                               choices=Month.CHOICES_SHORT, max_length=25,
                                blank=True, null=True)
-    bymonthday = IntegerListField(choices=ONE_TO_31, max_length=200,
-                                  blank=True, null=True)
-    byyearday = IntegerListField(choices=ONE_TO_366, max_length=1500,
+    bymonthday = IntegerListField(verbose_name=('By Month Day'),
+                                  choices=BY_MONTH_DAY_CHOICES, max_length=200,
+                                  blank=True, null=True,
+                                  help_text=BY_MONTH_DAY_HELP_TEXT)
+    byyearday = IntegerListField(verbose_name=_('By Year Day'),
+                                 choices=BY_YEAR_DAY_CHOICES, max_length=1500,
+                                 blank=True, null=True,
+                                 help_text=BY_YEAR_DAY_HELP_TEXT)
+    byweekno = IntegerListField(verbose_name=_('By Week Number'),
+                                choices=ONE_TO_53, max_length=200, blank=True,
+                                null=True)
+    byweekday = IntegerListField(verbose_name=_('By Weekday'),
+                                 choices=Day.CHOICES, max_length=25,
                                  blank=True, null=True)
-    byweekno = IntegerListField(choices=ONE_TO_53, max_length=200,
+    byhour = IntegerListField(verbose_name=_('By Hour'), choices=ZERO_TO_59,
+                              max_length=200, blank=True, null=True)
+    byminute = IntegerListField(verbose_name=_('By Minute'), choices=ZERO_TO_59,
+                                max_length=200, blank=True, null=True)
+    bysecond = IntegerListField(verbose_name=_('By Second'), choices=ZERO_TO_59,
+                                max_length=200, blank=True, null=True)
+    byeaster = IntegerListField(verbose_name=_('By Easter'), max_length=100,
                                 blank=True, null=True)
-    byweekday = IntegerListField(choices=Day.CHOICES, max_length=25,
-                                 blank=True, null=True)
-    byhour = IntegerListField(choices=ZERO_TO_59, max_length=200,
-                              blank=True, null=True)
-    byminute = IntegerListField(choices=ZERO_TO_59, max_length=200,
-                                blank=True, null=True)
-    bysecond = IntegerListField(choices=ZERO_TO_59, max_length=200,
-                                blank=True, null=True)
-    byeaster = IntegerListField(max_length=100, blank=True, null=True)
 
     objects = RecurrenceManager()
 

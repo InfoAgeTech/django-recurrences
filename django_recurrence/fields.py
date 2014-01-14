@@ -1,47 +1,43 @@
 # -*- coding: utf-8 -*-
 import collections
-from copy import deepcopy
+from datetime import date
+from datetime import datetime
 
 import dateutil.parser
 from dateutil.rrule import weekday
 from django.utils.six import string_types
 from django_core.models.fields import JSONField
+from python_dates.parsers import parse_datetime
 
 
-def generic_property(field):
-    """Defines the getter and setter for a generic property.  The value can
-    be any type.
+# from django.utils.dateparse import parse_datetime
+def _set_datetime_prop(value, prop_name):
+    """Helper method to set a date or datetime field.
+
+    :param value: the value to set
+    :param prop_name: the property to set (helps with error messaging).
     """
-    return property(lambda self: self._get(field=field),
-                    lambda self, value: self._set(value=value,
-                                                  field=field))
+    if value == None or isinstance(value, (datetime, date)):
+        return value
+    elif isinstance(value, string_types):
+        # Try to parse the date
+        return parse_datetime(value)
+
+    raise ValueError('{0} must be None, a date, a datetime, or a '
+                     'parseable date or datetime string.'.format(prop_name))
 
 
-def datetime_property(field):
-    """Defines the getter and setter for a datetime property.  Still want to be
-    able to set this to a string since I have to convert this field to a string
-    prior to saving.
-    """
-    return property(lambda self: self._get(field=field),
-                    lambda self, value: self._set(value=value,
-                                                  field=field))
-
-
-def int_property(field):
-    """Property for an int field."""
-    return property(lambda self: self._get(field=field),
-                    lambda self, value: self._set(value=int(value),
-                                                  field=field))
-
-
-def _set_list_property(self, value, field):
+def _set_rrule_list_prop(value):
     """Ensures a list is returned for a list property field.
 
-    This method allows rrule weekdays or lists or tuples of rrule weekdays to
+    This method allows rrule weekdays of lists or tuples of rrule weekdays to
     be passed in as a value. The problem with that is the rrule weekdays aren't
     serializeable. So, to fix that checks are made to convert the rrule
     weekdays to integers which jives well with the database.
     """
+    if value == None:
+        return None
+
     if isinstance(value, weekday):
         value = value.weekday
 
@@ -51,84 +47,178 @@ def _set_list_property(self, value, field):
             if isinstance(item, weekday):
                 value[index] = item.weekday
 
-    self._set(value=list(value)
-                    if isinstance(value, collections.Iterable)
-                    else [value],
-              field=field)
-
-
-def list_property(field):
-    """Property for a field that should be stored as a list."""
-    return property(lambda self: self._get(field=field),
-                    lambda self, value: _set_list_property(self, value, field))
+    return list(value) if isinstance(value, collections.Iterable) else [value]
 
 
 class Recurrence(object):
-    """Represents recurrence for an object."""
+    """Represents recurrence for an object based on RRule."""
 
-    dtstart = datetime_property(field='dtstart')
-    freq = int_property(field='freq')
-    interval = int_property(field='interval')
-    wkst = int_property(field='wkst')
-    count = int_property(field='count')
-    until = datetime_property(field='until')
-    bysetpos = list_property(field='bysetpos')
-    bymonth = list_property(field='bymonth')
-    bymonthday = list_property(field='bymonthday')
-    byyearday = list_property(field='byyearday')
-    byeaster = list_property(field='byeaster')
-    byweekno = list_property(field='byweekno')
-    byweekday = list_property(field='byweekday')
-    byhour = list_property(field='byhour')
-    byminute = list_property(field='byminute')
-    bysecond = list_property(field='bysecond')
+    @property
+    def dtstart(self):
+        return self._dtstart
 
-    def __init__(self, freq=None, **kwargs):
+    @dtstart.setter
+    def dtstart(self, value):
+        self._dtstart = _set_datetime_prop(value, 'dtstart')
+
+    @property
+    def until(self):
+        return self._until
+
+    @until.setter
+    def until(self, value):
+        self._until = _set_datetime_prop(value, 'until')
+
+    @property
+    def freq(self):
+        return self._freq
+
+    @freq.setter
+    def freq(self, value):
+        self._freq = int(value) if value != None else None
+
+    @property
+    def interval(self):
+        return self._interval
+
+    @interval.setter
+    def interval(self, value):
+        self._interval = int(value) if value != None else None
+
+    @property
+    def wkst(self):
+        return self._wkst
+
+    @wkst.setter
+    def wkst(self, value):
+        self._wkst = int(value) if value != None else None
+
+    @property
+    def count(self):
+        return self._count
+
+    @count.setter
+    def count(self, value):
+        self._count = int(value) if value != None else None
+
+    @property
+    def bysetpos(self):
+        return self._bysetpos
+
+    @bysetpos.setter
+    def bysetpos(self, value):
+        self._bysetpos = _set_rrule_list_prop(value)
+
+    @property
+    def bymonth(self):
+        return self._bymonth
+
+    @bymonth.setter
+    def bymonth(self, value):
+        self._bymonth = _set_rrule_list_prop(value)
+
+    @property
+    def bymonthday(self):
+        return self._bymonthday
+
+    @bymonthday.setter
+    def bymonthday(self, value):
+        self._bymonthday = _set_rrule_list_prop(value)
+
+    @property
+    def byyearday(self):
+        return self._byyearday
+
+    @byyearday.setter
+    def byyearday(self, value):
+        self._byyearday = _set_rrule_list_prop(value)
+
+    @property
+    def byweekno(self):
+        return self._byweekno
+
+    @byweekno.setter
+    def byweekno(self, value):
+        self._byweekno = _set_rrule_list_prop(value)
+
+    @property
+    def byweekday(self):
+        return self._byweekday
+
+    @byweekday.setter
+    def byweekday(self, value):
+        self._byweekday = _set_rrule_list_prop(value)
+
+    @property
+    def byhour(self):
+        return self._byhour
+
+    @byhour.setter
+    def byhour(self, value):
+        self._byhour = _set_rrule_list_prop(value)
+
+    @property
+    def byminute(self):
+        return self._byminute
+
+    @byminute.setter
+    def byminute(self, value):
+        self._byminute = _set_rrule_list_prop(value)
+
+    @property
+    def bysecond(self):
+        return self._bysecond
+
+    @bysecond.setter
+    def bysecond(self, value):
+        self._bysecond = _set_rrule_list_prop(value)
+
+    @property
+    def byeaster(self):
+        return self._byeaster
+
+    @byeaster.setter
+    def byeaster(self, value):
+        self._byeaster = _set_rrule_list_prop(value)
+
+    def __init__(self, freq=None, interval=1, **kwargs):
         """Frequency must be one of:
 
         :param freq: Must be one of: YEARLY (0), MONTHLY (1), WEEKLY (2),
             DAILY (3), HOURLY (4), MINUTELY (5), or SECONDLY (6)
 
         """
-        self._value = {}
+        self.freq = freq
+        self.interval = interval
 
-        # convert the datetimes to datetime objects
-        for attribute in ('dtstart', 'until'):
-            val = kwargs.get(attribute)
+        for field_name in self.get_field_names(exclude=['freq', 'interval']):
+            setattr(self, field_name, kwargs.get(field_name))
 
-            if isinstance(val, string_types):
-                kwargs[attribute] = dateutil.parser.parse(val)
+    def get_field_names(self, exclude=None):
+        """Gets all the rrule field names.
 
-        if freq is not None:
-            self.freq = freq
+        :param exclude: list of names to exclude
+        """
+        if not exclude:
+            exclude = []
 
-        for field, value in kwargs.items():
-            if value is not None:
-                setattr(self, field, value)
+        field_names = ['dtstart', 'freq', 'interval', 'wkst', 'count', 'until',
+                       'bysetpos', 'bymonth', 'bymonthday', 'byyearday',
+                       'byeaster', 'byweekno', 'byweekday', 'byhour',
+                       'byminute', 'bysecond']
 
-        super(Recurrence, self).__init__()
-
-    def _get(self, field):
-        return self._value.get(field)
-
-    def _set(self, value, field):
-        self._value[field] = value
-
-    def __delitem__(self, key, *args, **kwargs):
-        if key in self._value:
-            del self._value[key]
+        return [n for n in field_names if n not in exclude]
 
     def to_dict(self):
-        v = deepcopy(self._value)
+        vals = {}
 
-        # convert the datetimes to datetime object
-        for attribute in ('dtstart', 'until'):
-            val = v.get(attribute)
+        for field_name in self.get_field_names():
+            val = getattr(self, field_name, None)
 
-            if isinstance(val, string_types):
-                v[attribute] = dateutil.parser.parse(val)
+            if val != None:
+                vals[field_name] = val
 
-        return v
+        return vals
 
     def is_recurring(self):
         """For this object to be recurring, it must contain at least a start
@@ -146,9 +236,11 @@ class Recurrence(object):
         True
 
         """
-        num_keys = len(list(self.to_dict().keys()))
+        keys = list(self.to_dict().keys())
 
-        if num_keys <= 1 or self.dtstart and self.dtstart == self.until:
+        if (len(keys) <= 1 or
+            self.dtstart == self.until or
+            (len(keys) == 2 and 'dtstart' in keys and 'interval' in keys)):
             return False
 
         return True
@@ -178,7 +270,7 @@ class RecurrenceField(JSONField):
         if not value:
             return super(RecurrenceField, self).get_prep_value(None)
 
-        values = deepcopy(value._value)
+        values = value.to_dict()
 
         # convert the datetimes
         for attribute in ('dtstart', 'until'):
@@ -188,51 +280,3 @@ class RecurrenceField(JSONField):
                 values[attribute] = dt.isoformat()
 
         return super(RecurrenceField, self).get_prep_value(values)
-
-    def save(self, *args, **kwargs):
-
-        if isinstance(self.bysetpos, int):
-            self.bysetpos = [self.bysetpos]
-
-        if isinstance(self.bymonth, int):
-            self.bymonth = [self.bymonth]
-
-        if isinstance(self.bymonthday, int):
-            self.bymonthday = [self.bymonthday]
-
-        if isinstance(self.byyearday, int):
-            self.byyearday = [self.byyearday]
-
-        if isinstance(self.byeaster, int):
-            self.byeaster = [self.byeaster]
-
-        if isinstance(self.byweekno, int):
-            self.byweekno = [self.byweekno]
-
-        if isinstance(self.byweekday, int):
-            self.byweekday = [self.byweekday]
-
-        if isinstance(self.byhour, int):
-            self.byhour = [self.byhour]
-
-        if isinstance(self.byminute, int):
-            self.byminute = [self.byminute]
-
-        if isinstance(self.bysecond, int):
-            self.bysecond = [self.bysecond]
-
-        return super(RecurrenceField, self).save(*args, **kwargs)
-
-    def to_dict(self):
-        rr = {}
-
-        for field in self._fields.keys():
-            val = getattr(self, field, None)
-
-            if val != None:
-                rr[field] = val
-
-        return rr
-
-    def is_recurring(self):
-        return len(self.to_dict().keys()) > 0

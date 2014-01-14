@@ -31,13 +31,13 @@ class Day(object):
     FRIDAY = FR
     SATURDAY = SA
     SUNDAY = SU
-    CHOICES = ((MONDAY.weekday, _('MONDAY')),
-               (TUESDAY.weekday, _('TUESDAY')),
-               (WEDNESDAY.weekday, _('WEDNESDAY')),
-               (THURSDAY.weekday, _('THURSDAY')),
-               (FRIDAY.weekday, _('FRIDAY')),
-               (SATURDAY.weekday, _('SATURDAY')),
-               (SUNDAY.weekday, _('SUNDAY'))
+    CHOICES = ((MONDAY.weekday, _('Monday')),
+               (TUESDAY.weekday, _('Tuesday')),
+               (WEDNESDAY.weekday, _('Wednesday')),
+               (THURSDAY.weekday, _('Thursday')),
+               (FRIDAY.weekday, _('Friday')),
+               (SATURDAY.weekday, _('Saturday')),
+               (SUNDAY.weekday, _('Sunday'))
                )
     CHOICES_SHORT = ((MONDAY.weekday, _('MO')),
                      (TUESDAY.weekday, _('TU')),
@@ -62,16 +62,31 @@ class Month(object):
     OCTOBER = 10
     NOVEMBER = 11
     DECEMBER = 12
-    CHOICES = ((JANUARY, _('January')),
-               (FEBRUARY, _('February')),
-               (MARCH, _('March')),
-               (APRIL, _('April')),
-               (MAY, _('May')),
-               (JUNE, _('June')),
-               (JULY, _('July')),
-               (AUGUST, _('August')),
-               (SEPTEMBER, _('September')),
-               (OCTOBER, _('October')),
-               (NOVEMBER, _('November')),
-               (DECEMBER, _('December'))
-              )
+    CHOICES = (
+        (JANUARY, _('January')),
+        (FEBRUARY, _('February')),
+        (MARCH, _('March')),
+        (APRIL, _('April')),
+        (MAY, _('May')),
+        (JUNE, _('June')),
+        (JULY, _('July')),
+        (AUGUST, _('August')),
+        (SEPTEMBER, _('September')),
+        (OCTOBER, _('October')),
+        (NOVEMBER, _('November')),
+        (DECEMBER, _('December'))
+    )
+    CHOICES_SHORT = (
+        (JANUARY, _('Jan')),
+        (FEBRUARY, _('Feb')),
+        (MARCH, _('Mar')),
+        (APRIL, _('Apr')),
+        (MAY, _('May')),
+        (JUNE, _('Jun')),
+        (JULY, _('Jul')),
+        (AUGUST, _('Aug')),
+        (SEPTEMBER, _('Sep')),
+        (OCTOBER, _('Oct')),
+        (NOVEMBER, _('Nov')),
+        (DECEMBER, _('Dec'))
+    )

@@ -14,12 +14,12 @@ from .choices import FrequencyChoices
 from .widgets import FrequencyWidget
 
 
-class FrequencyFormFields(object):
-
-    def __init__(self, ending, num_occurrence=None, end_date=None):
-        self.ending = ending
-        self.num_occurrence = num_occurrence
-        self.end_date = end_date
+# class FrequencyFormFields(object):
+#
+#     def __init__(self, ending, num_occurrence=None, end_date=None):
+#         self.ending = ending
+#         self.num_occurrence = num_occurrence
+#         self.end_date = end_date
 
 
 class RecurrenceField(MultiValueField):
@@ -104,6 +104,13 @@ class RecurrenceField(MultiValueField):
         elif freq == 'every_other_week':
             kwargs['freq'] = WEEKLY
             kwargs['interval'] = 2
+        elif freq == 'same_day_of_month':
+            raise NotImplementedError()
+            kwargs['freq'] = MONTHLY
+            kwargs['bymonthday'] = 1
+        elif freq == 'first_day_of_month':
+            kwargs['freq'] = MONTHLY
+            kwargs['bymonthday'] = 1
         elif freq == 'last_day_of_month':
             kwargs['freq'] = MONTHLY
             kwargs['bymonthday'] = -1

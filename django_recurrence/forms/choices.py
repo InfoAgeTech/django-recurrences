@@ -12,6 +12,8 @@ FREQUENCY_CHOICES = (
     ('semi_annual', _('Semi-Annual')),
     (Frequency.YEARLY, _('Yearly')),
     ('every_other_week', _('Every Other Week')),
+    ('same_day_of_month', _('Same Day of the Month')),
+    ('first_day_of_month', _('First Day of the Month')),
     ('last_day_of_month', _('Last Day of the Month')),
 )
 

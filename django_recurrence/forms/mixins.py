@@ -34,3 +34,16 @@ class RecurrenceFormMixin(forms.Form):
             pass
 
         return cleaned_data
+
+
+# class RecurrenceNewFormMixin(forms.ModelForm):
+#
+# #     class Media:
+# #         js = (...)
+# #         css = (...)
+#     bymonthday = CommaSeparatedListField
+#
+#     class Meta:
+#         model = AbstractRecurrenceModelMixin
+#         fields = ('')
+

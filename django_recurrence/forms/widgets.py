@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 from django.forms import widgets
 from django.forms.widgets import MultiWidget
 from django.forms.widgets import NumberInput
 from django.utils.safestring import mark_safe
 from django.utils.six import string_types
 from django.utils.translation import ugettext as _
-from django_forms.html5.widgets import Html5DateInput
+from django_core.forms.widgets import Html5DateInput
 
 from .choices import FREQUENCY_CHOICES
 from .choices import FrequencyChoices
@@ -80,24 +82,24 @@ class FrequencyWidget(MultiWidget):
         days_of_week_html += '<p class="help-block">Only applicable for weekly repeat.</p>'
 
         # Render ending
-        num_occurrences_name = u'{0}_{1}'.format(
+        num_occurrences_name = '{0}_{1}'.format(
                                             name,
                                             FrequencyChoices.NUM_OCCURRENCES)
         num_occurrences_html = NumberInput().render(
                         name=num_occurrences_name,
                         value=value.num_occurrences if value else '',
                         attrs={'step': 1,
-                               'id': u'id_{0}'.format(num_occurrences_name)
+                               'id': 'id_{0}'.format(num_occurrences_name)
                                })
 
-        stop_after_date_name = u'{0}_{1}'.format(
+        stop_after_date_name = '{0}_{1}'.format(
                                             name,
                                             FrequencyChoices.STOP_AFTER_DATE)
 
         stop_after_date_html = Html5DateInput().render(
                         name=stop_after_date_name,
                         value=value.stop_after_date if value else '',
-                        attrs={'id': u'id_{0}'.format(stop_after_date_name)})
+                        attrs={'id': 'id_{0}'.format(stop_after_date_name)})
 
         # Do some hacky stuff with the label rendering to it performs as
         # expected on the front end
@@ -117,9 +119,9 @@ class FrequencyWidget(MultiWidget):
                             attrs={'id': 'id_{0}_ending'.format(name)},
                             choices=END_CHOICES)
 
-        return mark_safe(u'<div class="frequency">{freq}</div>'
-                          '<div class="days-of-week">{days_of_week}</div>'
-                          '<div class="ending">{ending}</div>'.format(
+        return mark_safe('<div class="recurrence frequency">{freq}</div>'
+                         '<div class="recurrence days-of-week">{days_of_week}</div>'
+                         '<div class="recurrence ending">{ending}</div>'.format(
                                             freq=freq_html,
                                             days_of_week=days_of_week_html,
                                             ending=ending_html))
