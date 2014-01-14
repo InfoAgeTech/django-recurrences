@@ -32,7 +32,15 @@ setup(
     include_package_data=True,
     zip_safe=False,
     test_suite='nose.collector',
-    tests_require=['nose'],
+    tests_require=[
+        'django_nose',
+        'https://github.com/InfoAgeTech/django-testing/tarball/master'
+    ],
+    install_requires=[
+        'python-dateutil>=1.5',
+        'https://github.com/InfoAgeTech/django-core/tarball/master',
+        'https://github.com/InfoAgeTech/python-dates/tarball/master'
+    ],
     setup_requires=[
         'django >= 1.5.5',
         'python-dateutil>=1.5',
