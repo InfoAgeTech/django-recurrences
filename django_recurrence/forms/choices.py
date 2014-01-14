@@ -28,6 +28,9 @@ WEEKDAY_CHOICES = (
 )
 
 
+# TODO: This need to follow the rrule naming conventions.
+#    - "NUM_OCCURRENCES" should be "COUNT"
+#    - "STOP_AFTER_DATE" should be "UNTIL"
 class FrequencyChoices(object):
     NEVER = 'NEVER'  # never recur
     NUM_OCCURRENCES = 'NUM_OCCURRENCES'  # stop after number of occurrences
