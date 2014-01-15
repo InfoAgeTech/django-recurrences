@@ -34,14 +34,17 @@ class FrequencyWidgetValues(object):
 
 class FrequencyWidget(MultiWidget):
 
-    def __init__(self, attrs=None):
+    def __init__(self, widgets, attrs=None, *args, **kwargs):
+#     def __init__(self, widgets=None, attrs=None, **kwargs):
         # Textarea is a good widget to look at for attrs
-        w = (widgets.Select(choices=FREQUENCY_CHOICES),
-             widgets.CheckboxSelectMultiple(choices=WEEKDAY_CHOICES),
-             widgets.RadioSelect(),  # choices=FrequencyChoices.ALL),
-             widgets.TextInput()
-            )
-        super(FrequencyWidget, self).__init__(widgets=w, attrs=attrs)
+#         if not widgets:
+#             widgets = (widgets.Select(choices=FREQUENCY_CHOICES),
+#                      widgets.CheckboxSelectMultiple(choices=WEEKDAY_CHOICES),
+#                      widgets.RadioSelect(),  # choices=FrequencyChoices.ALL),
+#                      widgets.TextInput()
+#                     )
+        super(FrequencyWidget, self).__init__(widgets=widgets, attrs=attrs,
+                                              *args, **kwargs)
 
     def value_from_datadict(self, data, files, name):
         return FrequencyWidgetValues(
@@ -53,7 +56,22 @@ class FrequencyWidget(MultiWidget):
                     stop_after_date=data.get('{0}_{1}'.format(name,
                                                               FrequencyChoices.STOP_AFTER_DATE)))
 
+    def decompress(self, value):
+        # This should return values for each of the widgets?  Or just return
+        # a Recurrence object?
+        return []
+
     def render(self, name, value, attrs=None):
+#         if not isinstance(value, list):
+#             value = self.decompress(value)
+        if not attrs:
+            attrs = {}
+
+        attrs = {'id': 'sometestid'}
+        all_widget_html = super(FrequencyWidget, self).render(name=name, value=[],
+                                                   attrs=attrs)
+        return mark_safe('<div class="recurrence-widget">{0}</div>'.format(all_widget_html))
+
         if isinstance(value, string_types):
             # This was passed a string initial value for the freq. Convert this
             # into a FrequencyWidgetValues object.

@@ -189,10 +189,12 @@ class Recurrence(object):
         self.freq = freq
         self.interval = interval
 
-        for field_name in self.get_field_names(exclude=['freq', 'interval']):
+        for field_name in Recurrence.get_field_names(exclude=['freq',
+                                                              'interval']):
             setattr(self, field_name, kwargs.get(field_name))
 
-    def get_field_names(self, exclude=None):
+    @classmethod
+    def get_field_names(cls, exclude=None):
         """Gets all the rrule field names.
 
         :param exclude: list of names to exclude

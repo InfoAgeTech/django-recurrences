@@ -4,6 +4,8 @@ from dateutil.rrule import MONTHLY
 from dateutil.rrule import WEEKLY
 from django import forms
 from django.forms.fields import MultiValueField
+from django_core.forms.widgets import CommaSeparatedListWidget
+from django_core.forms.widgets import Html5DateInput
 from python_dates.converters import weekday_to_int
 
 from ..constants import Frequency
@@ -14,26 +16,61 @@ from .choices import FrequencyChoices
 from .widgets import FrequencyWidget
 
 
-# class FrequencyFormFields(object):
-#
-#     def __init__(self, ending, num_occurrence=None, end_date=None):
-#         self.ending = ending
-#         self.num_occurrence = num_occurrence
-#         self.end_date = end_date
 class RecurrenceField(MultiValueField):
     """Form field that handles recurrence and returns a
     django_recurrence.fields.Recurrence field.
     """
-    widget = FrequencyWidget
+#     widget = FrequencyWidget
 
-    def __init__(self, *args, **kwargs):
-        fields = [
-            forms.ChoiceField(choices=FREQUENCY_CHOICES),  # freq
-            forms.MultipleChoiceField(choices=WEEKDAY_CHOICES),  # days of week
-            forms.IntegerField(min_value=1),  # num occurrences
-            forms.DateField()  # stop after date
-        ]
-        super(RecurrenceField, self).__init__(fields=fields, *args, **kwargs)
+    def __init__(self, field_widgets=None, *args, **kwargs):
+        """
+        :param field_widgets: dict of widgets keyed by rrule freq field name to
+            override the default widget.
+        """
+        # These are the field widgets to use for each field
+        self.field_widgets = {
+            'dtstart': Html5DateInput(),
+            'until': Html5DateInput(),
+            'bymonth': forms.CheckboxSelectMultiple(),
+            'bymonthday': CommaSeparatedListWidget(),
+            'byweekday': forms.CheckboxSelectMultiple(),
+            'byyearday': CommaSeparatedListWidget()
+        }
+
+        if isinstance(field_widgets, dict):
+            self.field_widgets.update(field_widgets)
+
+        fields = []
+        from django_recurrence.models import AbstractRecurrenceModelMixin
+        recurrence_meta = AbstractRecurrenceModelMixin._meta
+
+        for field_name in Recurrence.get_field_names(exclude=['dtstart']):
+            field_widget = self.field_widgets.get(field_name)
+            form_field_kwargs = {'widget': field_widget} if field_widget else {}
+
+            if field_name == 'until':
+                model_field_name = 'end_date'
+            else:
+                model_field_name = field_name
+
+            model_field = recurrence_meta.get_field_by_name(model_field_name)[0]
+            fields.append(model_field.formfield(**form_field_kwargs))
+
+        widgets = [f.widget for f in fields]
+        widget = FrequencyWidget(widgets=widgets)
+        super(RecurrenceField, self).__init__(fields=fields, widget=widget,
+                                              *args, **kwargs)
+
+    def compress(self, data_list):
+        """TODO: Return a Recurrence object with all the data."""
+
+        return self.get_recurrence_from_values(values=data_list)
+
+#     def get_rrule_field_names(self):
+#         return ['dtstart', 'freq', 'interval', 'wkst', 'count', 'until',
+#                 'bysetpos', 'bymonth', 'bymonthday', 'byyearday',
+#                 'byeaster', 'byweekno', 'byweekday', 'byhour',
+#                 'byminute', 'bysecond']
 
     def clean(self, value):
 
