@@ -89,7 +89,8 @@ class AbstractRecurrenceModelMixin(models.Model):
     # Recurrence Rule fields
     freq = models.PositiveIntegerField(choices=Frequency.CHOICES, blank=True,
                                        null=True)
-    interval = models.PositiveIntegerField(default=1, blank=True, null=True)
+    interval = models.PositiveIntegerField(choices=ONE_TO_31, default=1,
+                                           blank=True, null=True)
     wkst = models.PositiveIntegerField(choices=Day.CHOICES, blank=True,
                                        null=True)
     count = models.PositiveIntegerField(verbose_name=_('Total Occurrences'),

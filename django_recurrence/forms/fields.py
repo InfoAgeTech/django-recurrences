@@ -14,50 +14,182 @@ from ..forms.choices import WEEKDAY_CHOICES
 from ..rrule import Recurrence
 from .choices import FrequencyChoices
 from .widgets import FrequencyWidget
+from collections import OrderedDict
+from django.forms.widgets import CheckboxSelectMultiple
+from django_recurrence.constants import Month
+from django_recurrence.constants import Day
+from django.forms.widgets import Select
+from django.forms.widgets import HiddenInput
+from django_recurrence.models import ONE_TO_31
 
 
+# TODO: Should I put this method as a class method in the AbstractRecurrenceModelMixin?
+def get_rrule_form_fields(field_widgets=None, only=None, exclude=None):
+    """Gets a dict with the key being the rrule field name and the value
+    being the widget for the field.
+
+    :param field_widgets: dict of widgets keyed by rrule freq field name to
+            override the default widget.
+    :param only: list of rrule field to only include
+    :param exclude: list of rrule fields to exclude
+    """
+    # Define the order for the OrderedDict.  This will define the order they
+    # are displayed in the widget.
+    key_order = ['dtstart', 'freq', 'interval', 'bymonth', 'byweekday',
+                 'wkst', 'bysetpos', 'byyearday', 'bymonthday', 'byweekno',
+                 'byhour', 'byminute', 'bysecond', 'byeaster', 'count',
+                 'until']
+
+    if only != None:
+        key_order = [k for k in key_order if k in only]
+    elif exclude != None:
+        key_order = [k for k in key_order if k not in exclude]
+
+    # Define the default widgets to use for each form field
+    default_widgets = {
+        'dtstart': HiddenInput(),
+        'until': Html5DateInput(),
+        'freq': Select(choices=FREQUENCY_CHOICES),
+        'interval': Select(choices=ONE_TO_31),  # Make this a select with numbers?
+        'wkst': HiddenInput(),
+        'bymonth': CheckboxSelectMultiple(choices=Month.CHOICES_SHORT),
+        'bymonthday': CommaSeparatedListWidget(),
+        'byweekday': CheckboxSelectMultiple(choices=Day.CHOICES_SHORT),
+        'byyearday': CommaSeparatedListWidget(),
+        'bysetpos': HiddenInput(),
+        'byweekno': CommaSeparatedListWidget(),
+        'byhour': HiddenInput(),
+        'byminute': HiddenInput(),
+        'bysecond': HiddenInput(),
+        'byeaster': HiddenInput()
+    }
+
+    default_choices = {
+        'freq': FREQUENCY_CHOICES,
+        'bymonth': Month.CHOICES_SHORT,
+        'byweekday': Day.CHOICES_SHORT,
+        'interval': ONE_TO_31
+    }
+
+    if isinstance(field_widgets, dict):
+        default_widgets.update(field_widgets)
+
+    field_widgets = default_widgets
+
+    # This is an OrderedDict so I can guarantee order when calling .values()
+    # to get the widget order.
+    fields = OrderedDict([])
+
+    from django_recurrence.models import AbstractRecurrenceModelMixin
+    meta = AbstractRecurrenceModelMixin._meta
+
+    for field_name in key_order:
+        field_widget = field_widgets.get(field_name)
+        form_field_kwargs = {'widget': field_widget} if field_widget else {}
+
+        if field_name in default_choices:
+            form_field_kwargs['choices'] = default_choices.get(field_name)
+
+        # Have to do this logic because the AbstractRecurrenceModelMixin uses
+        # fields called "start_date" and "end_date" instead of "dtstart" and
+        # "until"
+        if field_name == 'dtstart':
+            model_field_name = 'start_date'
+        elif field_name == 'until':
+            model_field_name = 'end_date'
+        else:
+            model_field_name = field_name
+
+        model_field = meta.get_field_by_name(model_field_name)[0]
+        fields[field_name] = model_field.formfield(**form_field_kwargs)
+
+    # This is an OrderedDict so I can guarantee order when calling .values()
+    # to get the widget order.
+#     form_fields = OrderedDict([(field_name, field)
+#                                for field_name, field in fields.items()])
+#
+#     form_fields = OrderedDict([
+#         ('dtstart', fields.get('dtstart')),
+#         # TODO: might need to be a charfield (int and string mix)
+#         ('freq', fields.get('freq')),
+#         ('interval', fields.get('interval')),
+#         ('wkst', fields.get('wkst')),
+#         ('count', fields.get('count')),
+#         ('until', fields.get('until')),
+#         ('bysetpos', fields.get('bysetpos')),
+#         ('bymonth', fields.get('bymonth')),
+#         ('bymonthday', fields.get('bymonthday')),
+#         ('byyearday', fields.get('byyearday')),
+#         ('byweekno', fields.get('byweekno')),
+#         ('byweekday', fields.get('byweekday')),
+#         ('byhour', fields.get('byhour')),
+#         ('byminute', fields.get('byminute')),
+#         ('bysecond', fields.get('bysecond')),
+#         ('byeaster', fields.get('byeaster'))
+#     ])
+
+    return fields
+
+
+# TODO: Explicity list out all fields for the recurrence.  It maks the code much
+#       cleaner and more clear.
 class RecurrenceField(MultiValueField):
     """Form field that handles recurrence and returns a
     django_recurrence.fields.Recurrence field.
     """
 #     widget = FrequencyWidget
 
-    def __init__(self, field_widgets=None, *args, **kwargs):
+    def __init__(self, field_widgets=None, only=None, exclude=None, *args,
+                 **kwargs):
         """
         :param field_widgets: dict of widgets keyed by rrule freq field name to
             override the default widget.
         """
         # These are the field widgets to use for each field
-        self.field_widgets = {
-            'dtstart': Html5DateInput(),
-            'until': Html5DateInput(),
-            'bymonth': forms.CheckboxSelectMultiple(),
-            'bymonthday': CommaSeparatedListWidget(),
-            'byweekday': forms.CheckboxSelectMultiple(),
-            'byyearday': CommaSeparatedListWidget()
-        }
+#         self.field_widgets = {
+#             'dtstart': Html5DateInput(),
+#             'until': Html5DateInput(),
+#             'bymonth': forms.CheckboxSelectMultiple(),
+#             'bymonthday': CommaSeparatedListWidget(),
+#             'byweekday': forms.CheckboxSelectMultiple(),
+#             'byyearday': CommaSeparatedListWidget()
+#         }
+#
+#         if isinstance(field_widgets, dict):
+#             self.field_widgets.update(field_widgets)
+#
+#         fields = []
+#         from django_recurrence.models import AbstractRecurrenceModelMixin
+#         recurrence_meta = AbstractRecurrenceModelMixin._meta
+#
+#         for field_name in Recurrence.get_field_names(exclude=['dtstart']):
+#             field_widget = self.field_widgets.get(field_name)
+#             form_field_kwargs = {'widget': field_widget} if field_widget else {}
+#
+#             if field_name == 'until':
+#                 model_field_name = 'end_date'
+#             else:
+#                 model_field_name = field_name
+#
+#             model_field = recurrence_meta.get_field_by_name(model_field_name)[0]
+#             fields.append(model_field.formfield(**form_field_kwargs))
+        self.keyed_fields = get_rrule_form_fields(field_widgets=field_widgets,
+                                                  only=only,
+                                                  exclude=exclude)
+        self.key_order = [field_name for field_name in self.keyed_fields.keys()]
+        fields = [field for field in self.keyed_fields.values()]
 
-        if isinstance(field_widgets, dict):
-            self.field_widgets.update(field_widgets)
+        keyed_widgets = OrderedDict([])
 
-        fields = []
-        from django_recurrence.models import AbstractRecurrenceModelMixin
-        recurrence_meta = AbstractRecurrenceModelMixin._meta
+        for name, field in self.keyed_fields.items():
+            field.widget.help_text = field.help_text
+            field.widget.label = field.label
+            keyed_widgets[name] = field.widget
 
-        for field_name in Recurrence.get_field_names(exclude=['dtstart']):
-            field_widget = self.field_widgets.get(field_name)
-            form_field_kwargs = {'widget': field_widget} if field_widget else {}
-
-            if field_name == 'until':
-                model_field_name = 'end_date'
-            else:
-                model_field_name = field_name
-
-            model_field = recurrence_meta.get_field_by_name(model_field_name)[0]
-            fields.append(model_field.formfield(**form_field_kwargs))
-
-        widgets = [f.widget for f in fields]
-        widget = FrequencyWidget(widgets=widgets)
+#         keyed_widgets = OrderedDict([(name, field.widget)
+#                                      for name, field in self.keyed_fields.items()])
+#         widgets = [field.widget for field in fields]
+        widget = FrequencyWidget(keyed_widgets=keyed_widgets)
         super(RecurrenceField, self).__init__(fields=fields, widget=widget,
                                               *args, **kwargs)
 
