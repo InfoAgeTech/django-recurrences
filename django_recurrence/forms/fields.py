@@ -103,31 +103,6 @@ def get_rrule_form_fields(field_widgets=None, only=None, exclude=None):
         model_field = meta.get_field_by_name(model_field_name)[0]
         fields[field_name] = model_field.formfield(**form_field_kwargs)
 
-    # This is an OrderedDict so I can guarantee order when calling .values()
-    # to get the widget order.
-#     form_fields = OrderedDict([(field_name, field)
-#                                for field_name, field in fields.items()])
-#
-#     form_fields = OrderedDict([
-#         ('dtstart', fields.get('dtstart')),
-#         # TODO: might need to be a charfield (int and string mix)
-#         ('freq', fields.get('freq')),
-#         ('interval', fields.get('interval')),
-#         ('wkst', fields.get('wkst')),
-#         ('count', fields.get('count')),
-#         ('until', fields.get('until')),
-#         ('bysetpos', fields.get('bysetpos')),
-#         ('bymonth', fields.get('bymonth')),
-#         ('bymonthday', fields.get('bymonthday')),
-#         ('byyearday', fields.get('byyearday')),
-#         ('byweekno', fields.get('byweekno')),
-#         ('byweekday', fields.get('byweekday')),
-#         ('byhour', fields.get('byhour')),
-#         ('byminute', fields.get('byminute')),
-#         ('bysecond', fields.get('bysecond')),
-#         ('byeaster', fields.get('byeaster'))
-#     ])
-
     return fields
 
 
@@ -137,7 +112,6 @@ class RecurrenceField(MultiValueField):
     """Form field that handles recurrence and returns a
     django_recurrence.fields.Recurrence field.
     """
-#     widget = FrequencyWidget
 
     def __init__(self, field_widgets=None, only=None, exclude=None, *args,
                  **kwargs):
@@ -145,34 +119,6 @@ class RecurrenceField(MultiValueField):
         :param field_widgets: dict of widgets keyed by rrule freq field name to
             override the default widget.
         """
-        # These are the field widgets to use for each field
-#         self.field_widgets = {
-#             'dtstart': Html5DateInput(),
-#             'until': Html5DateInput(),
-#             'bymonth': forms.CheckboxSelectMultiple(),
-#             'bymonthday': CommaSeparatedListWidget(),
-#             'byweekday': forms.CheckboxSelectMultiple(),
-#             'byyearday': CommaSeparatedListWidget()
-#         }
-#
-#         if isinstance(field_widgets, dict):
-#             self.field_widgets.update(field_widgets)
-#
-#         fields = []
-#         from django_recurrence.models import AbstractRecurrenceModelMixin
-#         recurrence_meta = AbstractRecurrenceModelMixin._meta
-#
-#         for field_name in Recurrence.get_field_names(exclude=['dtstart']):
-#             field_widget = self.field_widgets.get(field_name)
-#             form_field_kwargs = {'widget': field_widget} if field_widget else {}
-#
-#             if field_name == 'until':
-#                 model_field_name = 'end_date'
-#             else:
-#                 model_field_name = field_name
-#
-#             model_field = recurrence_meta.get_field_by_name(model_field_name)[0]
-#             fields.append(model_field.formfield(**form_field_kwargs))
         self.keyed_fields = get_rrule_form_fields(field_widgets=field_widgets,
                                                   only=only,
                                                   exclude=exclude)
@@ -186,23 +132,13 @@ class RecurrenceField(MultiValueField):
             field.widget.label = field.label
             keyed_widgets[name] = field.widget
 
-#         keyed_widgets = OrderedDict([(name, field.widget)
-#                                      for name, field in self.keyed_fields.items()])
-#         widgets = [field.widget for field in fields]
         widget = FrequencyWidget(keyed_widgets=keyed_widgets)
         super(RecurrenceField, self).__init__(fields=fields, widget=widget,
                                               *args, **kwargs)
 
     def compress(self, data_list):
         """TODO: Return a Recurrence object with all the data."""
-
         return self.get_recurrence_from_values(values=data_list)
-
-#     def get_rrule_field_names(self):
-#         return ['dtstart', 'freq', 'interval', 'wkst', 'count', 'until',
-#                 'bysetpos', 'bymonth', 'bymonthday', 'byyearday',
-#                 'byeaster', 'byweekno', 'byweekday', 'byhour',
-#                 'byminute', 'bysecond']
 
     def clean(self, value):
 

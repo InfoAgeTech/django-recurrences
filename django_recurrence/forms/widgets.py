@@ -84,11 +84,10 @@ def get_rrule_widgets(only=None, exclude=None):
 class FrequencyWidget(MultiWidget):
 
     def __init__(self, keyed_widgets, attrs=None, *args, **kwargs):
-        # TODO: Instead of pasing "widgets" here, pass "keyed_widgets" which is
-        #       an OrderedDict so I know the key order to use for decompress
-        #       method
-#     def __init__(self, widgets=None, attrs=None, **kwargs):
-        # Textarea is a good widget to look at for attrs
+        """
+        :param keyed_widgets: an OrderedDict of rrule field names as the key
+            and the widget as the value.
+        """
 #         if not widgets:
 #             widgets = (widgets.Select(choices=FREQUENCY_CHOICES),
 #                      widgets.CheckboxSelectMultiple(choices=WEEKDAY_CHOICES),
@@ -103,7 +102,7 @@ class FrequencyWidget(MultiWidget):
 
     def value_from_datadict(self, data, files, name):
         """Get a recurrence object for the data passed in."""
-
+        # TODO: This should return a Recurrence object?
         return FrequencyWidgetValues(
                     freq=data.get('{0}_freq'.format(name)),
                     days_of_week=data.getlist('{0}_days_of_week'.format(name)),
@@ -238,19 +237,22 @@ class FrequencyWidget(MultiWidget):
                                     value=getattr(value, widget_name, None),
                                     attrs=widget_attrs)
 
+        if getattr(widget, 'input_type', None) == 'hidden':
+            return widget_html
+
         if getattr(widget, 'help_text', None) and widget.help_text:
             help_text = '<p class="help-block">{0}</p>'.format(widget.help_text)
         else:
             help_text = ''
 
         return ('<div class="recurrence-field {name}-{widget_name}">'
-                '{pre_widget_html}{widget_html}{post_widget_html}</div>'
-                '{help_text}'.format(name=name,
-                                     widget_name=widget_name,
-                                     pre_widget_html=pre_widget_html,
-                                     widget_html=widget_html,
-                                     post_widget_html=post_widget_html,
-                                     help_text=help_text))
+                '{pre_widget_html}{widget_html}{post_widget_html}'
+                '{help_text}</div>'.format(name=name,
+                                           widget_name=widget_name,
+                                           pre_widget_html=pre_widget_html,
+                                           widget_html=widget_html,
+                                           post_widget_html=post_widget_html,
+                                           help_text=help_text))
 
     def render_ending(self, name, value, attrs=None):
         """Render the ending frequency radio options."""
