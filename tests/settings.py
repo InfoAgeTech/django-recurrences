@@ -27,7 +27,7 @@ INSTALLED_APPS = (
     'django_recurrence',
     'django_nose',
     'python_dates',
-    'test_models',  # adding as an installed app so testing models get picked up.
+    'test_objects',  # adding as an installed app so testing models get picked up.
 )
 
 # Added in django 1.5 secret key is required.  This is a random generated string

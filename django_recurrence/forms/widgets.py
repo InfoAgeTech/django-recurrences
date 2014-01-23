@@ -18,6 +18,7 @@ from django_core.forms.widgets import CommaSeparatedListWidget
 from django.forms.widgets import CheckboxSelectMultiple
 from django_recurrence.constants import Month
 from collections import OrderedDict
+from django_recurrence.constants import Frequency
 
 
 # TODO: I don't think this is being used and can be deleted
@@ -103,23 +104,71 @@ class FrequencyWidget(MultiWidget):
     def value_from_datadict(self, data, files, name):
         """Get a recurrence object for the data passed in."""
         # TODO: This should return a Recurrence object?
-        return FrequencyWidgetValues(
-                    freq=data.get('{0}_freq'.format(name)),
-                    days_of_week=data.getlist('{0}_days_of_week'.format(name)),
-                    ending=data.get('{0}_ending'.format(name)),
-                    num_occurrences=data.get('{0}_{1}'.format(name,
-                                                              FrequencyChoices.NUM_OCCURRENCES)),
-                    stop_after_date=data.get('{0}_{1}'.format(name,
-                                                              FrequencyChoices.STOP_AFTER_DATE)))
+        # ALL the validation going on here should happen in the clean model
+        recurrence_kwargs = {}
+        freq = data.get('{0}_freq'.format(name))
+
+        if freq == -1 or freq == '-1':
+            # This means there is no recurrence so don't pass any values on
+            return Recurrence()
+
+        # Get the ending value (count or until)
+        ending = data.get('{0}_ending'.format(name))
+
+        if ending == 'count':
+            count = data.get('{0}_count'.format(name))
+
+            if count != None:
+                recurrence_kwargs['count'] = count
+        elif ending == 'until':
+            until = data.get('{0}_until'.format(name))
+
+            if until != None:
+                recurrence_kwargs['until'] = until
+
+        # Get all single value items
+        for key in ('dtstart', 'freq', 'interval'):
+            key_value = data.get('{0}_{1}'.format(name, key))
+
+            if key_value:
+                recurrence_kwargs[key] = key_value
+
+        # Get all list items
+        for key in ('bymonth', 'bymonthday', 'byweekday', 'byyearday',
+                    'bysetpos', 'byweekno', 'byhour', 'byminute', 'bysecond',
+                    'byeaster'):
+            key_value = data.getlist('{0}_{1}'.format(name, key))
+
+            if key_value:
+                recurrence_kwargs[key] = key_value
+
+        return Recurrence(**recurrence_kwargs)
+#         return FrequencyWidgetValues(
+#                     freq=data.get('{0}_freq'.format(name)),
+#                     days_of_week=data.getlist('{0}_days_of_week'.format(name)),
+#                     ending=data.get('{0}_ending'.format(name)),
+#                     num_occurrences=data.get('{0}_{1}'.format(name,
+#                                                               FrequencyChoices.NUM_OCCURRENCES)),
+#                     stop_after_date=data.get('{0}_{1}'.format(name,
+#                                                               FrequencyChoices.STOP_AFTER_DATE)))
 
     def decompress(self, value):
         # This should return values for each of the widgets?  Or just return
         # a Recurrence object?
         # TODO: Fix this
+        recurrence_kwargs = {}
 
-        return Recurrence()
+        try:
+            if Frequency.YEARLY <= int(value) >= Frequency.SECONDLY:
+                recurrence_kwargs['freq'] = int(value)
+        except ValueError:
+            # Not a parseable int, don't set a freq
+            pass
+
+        return Recurrence(**recurrence_kwargs)
 
     def render(self, name, value, attrs=None):
+        """Render the html for the widget."""
 
         if not isinstance(value, Recurrence):
             value = self.decompress(value)
@@ -139,7 +188,13 @@ class FrequencyWidget(MultiWidget):
         # Here's where "count" and "until" get rendered
         ending_html = self.render_ending(name=name, value=value, attrs=attrs)
 
-        rendered_html.insert(5, ending_html)
+        try:
+            # Try to put the ending options right after the  weekday
+            rendered_html.insert(self.key_order.index('byweekday') + 1,
+                                 ending_html)
+        except:
+            rendered_html.append(ending_html)
+
         all_widget_html = ''.join(rendered_html)
 
         return mark_safe('<div class="recurrence-widget">{0}</div>'.format(all_widget_html))

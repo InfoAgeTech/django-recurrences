@@ -21,6 +21,7 @@ from django_recurrence.constants import Day
 from django.forms.widgets import Select
 from django.forms.widgets import HiddenInput
 from django_recurrence.models import ONE_TO_31
+from django.core.exceptions import ValidationError
 
 
 # TODO: Should I put this method as a class method in the AbstractRecurrenceModelMixin?
@@ -47,10 +48,10 @@ def get_rrule_form_fields(field_widgets=None, only=None, exclude=None):
 
     # Define the default widgets to use for each form field
     default_widgets = {
-        'dtstart': HiddenInput(),
+        'dtstart': Html5DateInput(),
         'until': Html5DateInput(),
         'freq': Select(choices=FREQUENCY_CHOICES),
-        'interval': Select(choices=ONE_TO_31),  # Make this a select with numbers?
+        'interval': Select(choices=ONE_TO_31),
         'wkst': HiddenInput(),
         'bymonth': CheckboxSelectMultiple(choices=Month.CHOICES_SHORT),
         'bymonthday': CommaSeparatedListWidget(),
@@ -58,10 +59,10 @@ def get_rrule_form_fields(field_widgets=None, only=None, exclude=None):
         'byyearday': CommaSeparatedListWidget(),
         'bysetpos': HiddenInput(),
         'byweekno': CommaSeparatedListWidget(),
-        'byhour': HiddenInput(),
-        'byminute': HiddenInput(),
-        'bysecond': HiddenInput(),
-        'byeaster': HiddenInput()
+        'byhour': CommaSeparatedListWidget(),
+        'byminute': CommaSeparatedListWidget(),
+        'bysecond': CommaSeparatedListWidget(),
+        'byeaster': CommaSeparatedListWidget()
     }
 
     default_choices = {
@@ -110,7 +111,7 @@ def get_rrule_form_fields(field_widgets=None, only=None, exclude=None):
 #       cleaner and more clear.
 class RecurrenceField(MultiValueField):
     """Form field that handles recurrence and returns a
-    django_recurrence.fields.Recurrence field.
+    django_recurrence.db.models.fields.Recurrence field.
     """
 
     def __init__(self, field_widgets=None, only=None, exclude=None, *args,
@@ -141,40 +142,59 @@ class RecurrenceField(MultiValueField):
         return self.get_recurrence_from_values(values=data_list)
 
     def clean(self, value):
+        errors = []
+        for key, field in self.keyed_fields.items():
+            try:
+                cleaned_value = field.clean(getattr(value, key, None))
+            except ValidationError as e:
+#                 if hasattr(e, 'code') and e.code in self.error_messages:
+#                     e.message = self.error_messages[e.code]
+                e.message = '{field_name}: {msg}'.format(
+                                       field_name=getattr(field, 'label', key),
+                                       msg=e.message)
+                errors.extend(e.error_list)
+                continue
 
-        value.freq = self.fields[0].clean(value.freq)
+            setattr(value, key, cleaned_value)
 
-        try:
-            value.freq = int(value.freq)
-        except:
-            # freq is not an integer, freq will already be correctly set for
-            # the cases where it's a string.
-            pass
+        if errors:
+            raise ValidationError(errors)
 
-        if value.ending == None:
-            # There's no ending set. If either num_occurences or
-            # stop_after_date has a value != None (only 1 is set) then make
-            # sure the ending is set to appropriate appropriately.
-            if not value.stop_after_date and value.num_occurrences:
-                value.ending = FrequencyChoices.NUM_OCCURRENCES
-            elif not value.num_occurrences and value.stop_after_date:
-                value.ending = FrequencyChoices.STOP_AFTER_DATE
+        return value
 
-        if value.ending in (FrequencyChoices.NUM_OCCURRENCES,
-                            FrequencyChoices.STOP_AFTER_DATE):
-            value.days_of_week = self.fields[1].clean(value.days_of_week)
-
-        if value.ending == FrequencyChoices.NUM_OCCURRENCES:
-            value.num_occurrences = self.fields[2].clean(value.num_occurrences)
-            value.stop_after_date = None
-        elif value.ending == FrequencyChoices.STOP_AFTER_DATE:
-            value.stop_after_date = self.fields[3].clean(value.stop_after_date)
-            value.num_occurrences = None
-        else:
-            # No recurrence
-            return None
-
-        return self.get_recurrence_from_values(values=value)
+#         value.freq = self.fields[0].clean(value.freq)
+#
+#         try:
+#             value.freq = int(value.freq)
+#         except:
+#             # freq is not an integer, freq will already be correctly set for
+#             # the cases where it's a string.
+#             pass
+#
+#         if value.ending == None:
+#             # There's no ending set. If either num_occurences or
+#             # stop_after_date has a value != None (only 1 is set) then make
+#             # sure the ending is set to appropriate appropriately.
+#             if not value.stop_after_date and value.num_occurrences:
+#                 value.ending = FrequencyChoices.NUM_OCCURRENCES
+#             elif not value.num_occurrences and value.stop_after_date:
+#                 value.ending = FrequencyChoices.STOP_AFTER_DATE
+#
+#         if value.ending in (FrequencyChoices.NUM_OCCURRENCES,
+#                             FrequencyChoices.STOP_AFTER_DATE):
+#             value.days_of_week = self.fields[1].clean(value.days_of_week)
+#
+#         if value.ending == FrequencyChoices.NUM_OCCURRENCES:
+#             value.num_occurrences = self.fields[2].clean(value.num_occurrences)
+#             value.stop_after_date = None
+#         elif value.ending == FrequencyChoices.STOP_AFTER_DATE:
+#             value.stop_after_date = self.fields[3].clean(value.stop_after_date)
+#             value.num_occurrences = None
+#         else:
+#             # No recurrence
+#             return None
+#
+#         return self.get_recurrence_from_values(values=value)
 
     def get_recurrence_from_values(self, values):
         kwargs = {}
