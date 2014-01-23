@@ -1,0 +1,12 @@
+{% spaceless %}
+<div class="recurrence-field {{ name }}-ending">
+    <div>
+        <input id="id_{{ name }}_count" type="radio" name="{{ name }}-ending" value="count" />&nbsp;
+        <label for="id_{{ name }}_count">Ending after {{ count_html }} occurrences</label>
+    </div>
+    <div>
+        <input id="id_{{ name }}_until" type="radio" name="{{ name }}-ending" value="until" />&nbsp;
+        <label for="id_{{ name }}_until">Ending on {{ until_html }}</label>
+    </div>
+</div>
+{% endspaceless %}

@@ -19,6 +19,7 @@ from django.forms.widgets import CheckboxSelectMultiple
 from django_recurrence.constants import Month
 from collections import OrderedDict
 from django_recurrence.constants import Frequency
+from django.template.loader import render_to_string
 
 
 # TODO: I don't think this is being used and can be deleted
@@ -103,8 +104,6 @@ class FrequencyWidget(MultiWidget):
 
     def value_from_datadict(self, data, files, name):
         """Get a recurrence object for the data passed in."""
-        # TODO: This should return a Recurrence object?
-        # ALL the validation going on here should happen in the clean model
         recurrence_kwargs = {}
         freq = data.get('{0}_freq'.format(name))
 
@@ -127,35 +126,26 @@ class FrequencyWidget(MultiWidget):
                 recurrence_kwargs['until'] = until
 
         # Get all single value items
-        for key in ('dtstart', 'freq', 'interval'):
+        for key in ('dtstart', 'freq', 'interval', 'wkst'):
             key_value = data.get('{0}_{1}'.format(name, key))
 
             if key_value:
                 recurrence_kwargs[key] = key_value
 
         # Get all list items
-        for key in ('bymonth', 'bymonthday', 'byweekday', 'byyearday',
-                    'bysetpos', 'byweekno', 'byhour', 'byminute', 'bysecond',
-                    'byeaster'):
+        for key in ('byyearday', 'bymonth', 'bymonthday', 'byweekday',
+                    'byweekno', 'byhour', 'byminute', 'bysecond', 'byeaster',
+                    'bysetpos'):
             key_value = data.getlist('{0}_{1}'.format(name, key))
 
             if key_value:
                 recurrence_kwargs[key] = key_value
 
         return Recurrence(**recurrence_kwargs)
-#         return FrequencyWidgetValues(
-#                     freq=data.get('{0}_freq'.format(name)),
-#                     days_of_week=data.getlist('{0}_days_of_week'.format(name)),
-#                     ending=data.get('{0}_ending'.format(name)),
-#                     num_occurrences=data.get('{0}_{1}'.format(name,
-#                                                               FrequencyChoices.NUM_OCCURRENCES)),
-#                     stop_after_date=data.get('{0}_{1}'.format(name,
-#                                                               FrequencyChoices.STOP_AFTER_DATE)))
 
     def decompress(self, value):
-        # This should return values for each of the widgets?  Or just return
-        # a Recurrence object?
-        # TODO: Fix this
+        """Returns a recurrence object."""
+
         recurrence_kwargs = {}
 
         try:
@@ -197,79 +187,8 @@ class FrequencyWidget(MultiWidget):
 
         all_widget_html = ''.join(rendered_html)
 
-        return mark_safe('<div class="recurrence-widget">{0}</div>'.format(all_widget_html))
-
-#         if isinstance(value, string_types):
-#             # This was passed a string initial value for the freq. Convert this
-#             # into a FrequencyWidgetValues object.
-#             value = FrequencyWidgetValues(freq=value)
-#         elif isinstance(value, Recurrence):
-#             ending = (FrequencyChoices.NUM_OCCURRENCES if value.count != None
-#                       else FrequencyChoices.STOP_AFTER_DATE)
-#             value = FrequencyWidgetValues(freq=value.freq,
-#                                           stop_after_date=value.until,
-#                                           num_occurrences=value.count,
-#                                           days_of_week=value.byweekday,
-#                                           ending=ending)
-#
-#         # Render the Freq
-#         freq_html = self.widgets[0].render(
-#                             name='{0}_freq'.format(name),
-#                             value=value.freq if value else None,
-#                             attrs={'id': 'id_{0}_freq'.format(name),
-#                                    'class': 'form-control'})
-#
-#         # Render the days of week choices
-#         days_of_week_html = self.widgets[1].render(
-#                             name='{0}_days_of_week'.format(name),
-#                             value=value.days_of_week if value else None,
-#                             attrs={'id': 'id_{0}_days_of_week'.format(name)})
-#         days_of_week_html += '<p class="help-block">Only applicable for weekly repeat.</p>'
-#
-#         # Render ending
-#         num_occurrences_name = '{0}_{1}'.format(
-#                                             name,
-#                                             FrequencyChoices.NUM_OCCURRENCES)
-#         num_occurrences_html = NumberInput().render(
-#                         name=num_occurrences_name,
-#                         value=value.num_occurrences if value else '',
-#                         attrs={'step': 1,
-#                                'id': 'id_{0}'.format(num_occurrences_name)
-#                                })
-#
-#         stop_after_date_name = '{0}_{1}'.format(
-#                                             name,
-#                                             FrequencyChoices.STOP_AFTER_DATE)
-#
-#         stop_after_date_html = Html5DateInput().render(
-#                         name=stop_after_date_name,
-#                         value=value.stop_after_date if value else '',
-#                         attrs={'id': 'id_{0}'.format(stop_after_date_name)})
-#
-#         # Do some hacky stuff with the label rendering to it performs as
-#         # expected on the front end
-#         END_CHOICES = (
-#             (FrequencyChoices.NUM_OCCURRENCES,
-#              _(mark_safe('Ending after</label> {0} '
-#                          '<label for="id_{1}">occurrences'.format(
-#                                                     num_occurrences_html,
-#                                                     num_occurrences_name)))),
-#             (FrequencyChoices.STOP_AFTER_DATE,
-#              _(mark_safe('Ending on</label> {0}<label>'.format(stop_after_date_html)))),
-#         )
-#
-#         ending_html = self.widgets[2].render(
-#                             name='{0}_ending'.format(name),
-#                             value=value.ending if value else None,
-#                             attrs={'id': 'id_{0}_ending'.format(name)},
-#                             choices=END_CHOICES)
-#
-#         return mark_safe('<div class="recurrence frequency">{freq}</div>'
-#                          '<div class="recurrence days-of-week">{days_of_week}</div>'
-#                          '<div class="recurrence ending">{ending}</div>'.format(
-#                                             freq=freq_html,
-#                                             days_of_week=days_of_week_html,
-#                                             ending=ending_html))
+        return mark_safe('<div class="recurrence-widget">{0}</div>'.format(
+                                                            all_widget_html))
 
     def render_field(self, name, value, widget_name, widget):
         """Renders a widget field."""
@@ -279,7 +198,8 @@ class FrequencyWidget(MultiWidget):
 
         if widget_name == 'interval':
             pre_widget_html = 'Repeat every'
-            post_widget_html = '<span class="{0}-interval-lbl">weeks</span>'.format(name)
+            post_widget_html = ('<span id="{0}-interval-lbl">weeks'
+                                '</span>'.format(name))
         elif widget_name not in ('bymonth', 'byweekday'):
             widget_attrs['class'] = 'form-control'
 
@@ -296,7 +216,8 @@ class FrequencyWidget(MultiWidget):
             return widget_html
 
         if getattr(widget, 'help_text', None) and widget.help_text:
-            help_text = '<p class="help-block">{0}</p>'.format(widget.help_text)
+            help_text = '<p class="help-block">{0}</p>'.format(
+                                                            widget.help_text)
         else:
             help_text = ''
 
@@ -321,13 +242,9 @@ class FrequencyWidget(MultiWidget):
                                     value=getattr(value, 'until', None),
                                     attrs={'id': 'id_{0}_until'.format(name)})
 
-        return ('<div class="recurrence-field {name}-ending">'
-            '<div>'
-            '<input id="id_{name}_count" type="radio" name="{name}-ending" value="count" /> '
-            '<label for="id_{name}_count">Ending after {count} occurrences</label>'
-            '</div><div>'
-            '<input id="id_{name}_until" type="radio" name="{name}-ending" value="until" /> '
-            '<label for="id_{name}_until">Ending on {until}</label>'
-            '</div></div>'.format(name=name,
-                                  count=count_widget_html,
-                                  until=until_widget_html))
+        context = {'name': name,
+                   'count_html': count_widget_html,
+                   'until_html': until_widget_html}
+
+        return render_to_string('django_recurrence/widget/ending.html',
+                                context)

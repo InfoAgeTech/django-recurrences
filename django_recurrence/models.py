@@ -91,13 +91,18 @@ class AbstractRecurrenceModelMixin(models.Model):
                                        null=True)
     interval = models.PositiveIntegerField(choices=ONE_TO_31, default=1,
                                            blank=True, null=True)
-    wkst = models.PositiveIntegerField(choices=Day.CHOICES, blank=True,
+    wkst = models.PositiveIntegerField(verbose_name=_('Week Start Day'),
+                                       choices=Day.CHOICES, blank=True,
                                        null=True)
     count = models.PositiveIntegerField(verbose_name=_('Total Occurrences'),
                                         blank=True, null=True)
     bysetpos = IntegerListField(verbose_name=_('By Set Position'),
                                 choices=BY_SET_POS_CHOICES, max_length=25,
                                 blank=True, null=True)
+    byyearday = IntegerListField(verbose_name=_('By Year Day'),
+                                 choices=BY_YEAR_DAY_CHOICES, max_length=1500,
+                                 blank=True, null=True,
+                                 help_text=BY_YEAR_DAY_HELP_TEXT)
     bymonth = IntegerListField(verbose_name=_('By Month'),
                                choices=Month.CHOICES_SHORT, max_length=25,
                                blank=True, null=True)
@@ -105,10 +110,6 @@ class AbstractRecurrenceModelMixin(models.Model):
                                   choices=BY_MONTH_DAY_CHOICES, max_length=200,
                                   blank=True, null=True,
                                   help_text=BY_MONTH_DAY_HELP_TEXT)
-    byyearday = IntegerListField(verbose_name=_('By Year Day'),
-                                 choices=BY_YEAR_DAY_CHOICES, max_length=1500,
-                                 blank=True, null=True,
-                                 help_text=BY_YEAR_DAY_HELP_TEXT)
     byweekno = IntegerListField(verbose_name=_('By Week Number'),
                                 choices=ONE_TO_53, max_length=200, blank=True,
                                 null=True)
