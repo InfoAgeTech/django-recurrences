@@ -72,6 +72,9 @@ BY_YEAR_DAY_HELP_TEXT = _('Comma separated list of year days to apply the '
                           '1st and 300th day of the year. If you want the '
                           'last day of the year, use the value -1 in your '
                           'list, second to last day -2 and so fourth.')
+BY_WEEK_NUMBER_HELP_TEXT = _('Comma separated list of week numbers to apply '
+                          'the recurrence to. A value of "1, 50" would be the '
+                          '1st and 50th weeks of the year.')
 
 
 class AbstractRecurrenceModelMixin(models.Model):
@@ -112,7 +115,7 @@ class AbstractRecurrenceModelMixin(models.Model):
                                   help_text=BY_MONTH_DAY_HELP_TEXT)
     byweekno = IntegerListField(verbose_name=_('By Week Number'),
                                 choices=ONE_TO_53, max_length=200, blank=True,
-                                null=True)
+                                null=True, help_text=BY_WEEK_NUMBER_HELP_TEXT)
     byweekday = IntegerListField(verbose_name=_('By Weekday'),
                                  choices=Day.CHOICES, max_length=25,
                                  blank=True, null=True)

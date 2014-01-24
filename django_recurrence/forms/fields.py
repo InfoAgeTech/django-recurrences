@@ -45,7 +45,7 @@ class RecurrenceField(MultiValueField):
 
         for name, field in self.keyed_fields.items():
             field.widget.help_text = field.help_text
-            field.widget.label = field.label
+#             field.widget.label = field.label
             keyed_widgets[name] = field.widget
 
         widget = FrequencyWidget(keyed_widgets=keyed_widgets)

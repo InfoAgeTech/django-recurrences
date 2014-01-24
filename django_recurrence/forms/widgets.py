@@ -157,11 +157,37 @@ class FrequencyWidget(MultiWidget):
 
         return Recurrence(**recurrence_kwargs)
 
+    def get_widget_label_defaults(self, overrides=None):
+        """
+        :param overrides: dict of value labels to override. Key is the rrule
+            field name.
+        """
+        return {
+            'dtstart': 'Starting',
+            'freq': None,
+            'interval': 'Every',
+            'wkst': 'Week Start',
+            'count': None,
+            'until': None,
+            'bysetpos': 'By set position',
+            'bymonth': 'on',
+            'bymonthday': 'By month day',
+            'byyearday': 'By year day',
+            'byweekno': 'By week number',
+            'byweekday': 'on',
+            'byhour': 'By Hour',
+            'byminute': 'By minute',
+            'bysecond': 'By second',
+            'byeaster': 'By easter'
+        }
+
     def render(self, name, value, attrs=None):
         """Render the html for the widget."""
 
         if not isinstance(value, Recurrence):
             value = self.decompress(value)
+
+        labels = self.get_widget_label_defaults()
 
         rendered_html = []
 
@@ -172,8 +198,9 @@ class FrequencyWidget(MultiWidget):
                 continue
 
             rendered_html.append(self.render_field(name=name, value=value,
-                                                   widget_name=widget_name,
-                                                   widget=widget))
+                                                widget_name=widget_name,
+                                                widget=widget,
+                                                label=labels.get(widget_name)))
 
         # Here's where "count" and "until" get rendered
         ending_html = self.render_ending(name=name, value=value, attrs=attrs)
@@ -190,45 +217,43 @@ class FrequencyWidget(MultiWidget):
         return mark_safe('<div class="recurrence-widget">{0}</div>'.format(
                                                             all_widget_html))
 
-    def render_field(self, name, value, widget_name, widget):
+    def render_field(self, name, value, widget_name, widget, label=None):
         """Renders a widget field."""
         widget_attrs = {'id': 'id_{0}_{1}'.format(name, widget_name)}
-        pre_widget_html = ''
-        post_widget_html = ''
+        context = {'name': name, 'widget_name': widget_name}
 
-        if widget_name == 'interval':
-            pre_widget_html = 'Repeat every'
-            post_widget_html = ('<span id="{0}-interval-lbl">weeks'
-                                '</span>'.format(name))
-        elif widget_name not in ('bymonth', 'byweekday'):
+        if label != None:
+            context['label'] = label
+
+        if widget_name not in ('bymonth', 'byweekday', 'interval'):
             widget_attrs['class'] = 'form-control'
 
-        if (getattr(widget, 'input_type', None) == 'text' and
-            getattr(widget, 'label', None) and
-            widget.label):
-            widget_attrs['placeholder'] = widget.label
-
-        widget_html = widget.render(name='{0}_{1}'.format(name, widget_name),
+        context['widget_html'] = widget.render(
+                                    name='{0}_{1}'.format(name, widget_name),
                                     value=getattr(value, widget_name, None),
                                     attrs=widget_attrs)
 
         if getattr(widget, 'input_type', None) == 'hidden':
-            return widget_html
+            return context['widget_html']
+
+        if widget_name == 'interval':
+            context['post_widget_html'] = ('&nbsp;<span id="{0}-interval-lbl">weeks'
+                                           '</span>'.format(name))
 
         if getattr(widget, 'help_text', None) and widget.help_text:
-            help_text = '<p class="help-block">{0}</p>'.format(
-                                                            widget.help_text)
-        else:
-            help_text = ''
+            context['help_text'] = widget.help_text
 
-        return ('<div class="recurrence-field {name}-{widget_name}">'
-                '{pre_widget_html}{widget_html}{post_widget_html}'
-                '{help_text}</div>'.format(name=name,
-                                           widget_name=widget_name,
-                                           pre_widget_html=pre_widget_html,
-                                           widget_html=widget_html,
-                                           post_widget_html=post_widget_html,
-                                           help_text=help_text))
+        return render_to_string('django_recurrence/widget/form_field.html',
+                                context)
+
+#         return ('<div class="recurrence-field {name}-{widget_name}">'
+#                 '{pre_widget_html}{widget_html}{post_widget_html}'
+#                 '{help_text}</div>'.format(name=name,
+#                                            widget_name=widget_name,
+#                                            pre_widget_html=pre_widget_html,
+#                                            widget_html=widget_html,
+#                                            post_widget_html=post_widget_html,
+#                                            help_text=help_text))
 
     def render_ending(self, name, value, attrs=None):
         """Render the ending frequency radio options."""
@@ -244,7 +269,8 @@ class FrequencyWidget(MultiWidget):
 
         context = {'name': name,
                    'count_html': count_widget_html,
-                   'until_html': until_widget_html}
+                   'until_html': until_widget_html,
+                   'label': 'Ending'}
 
         return render_to_string('django_recurrence/widget/ending.html',
                                 context)
