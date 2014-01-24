@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 
 # Do not run in DEBUG in production!!!

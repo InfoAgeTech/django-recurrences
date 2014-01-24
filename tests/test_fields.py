@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from django.test import TestCase
 from tests.test_objects.forms import TestRecurrenceForm
 from django_recurrence.constants import Frequency

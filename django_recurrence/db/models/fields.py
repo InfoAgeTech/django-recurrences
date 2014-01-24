@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 from django_core.models.fields import JSONField
 
 from django_recurrence.rrule import Recurrence

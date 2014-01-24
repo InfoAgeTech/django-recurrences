@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 from django.utils.translation import ugettext as _
 
 from ..constants import Frequency
@@ -28,16 +29,3 @@ WEEKDAY_CHOICES = (
     (Day.FRIDAY, 'Friday'),
     (Day.SATURDAY, 'Saturday'),
 )
-
-
-# TODO: This need to follow the rrule naming conventions.
-#    - "NUM_OCCURRENCES" should be "COUNT"
-#    - "STOP_AFTER_DATE" should be "UNTIL"
-class FrequencyChoices(object):
-    NEVER = 'NEVER'  # never recur
-    NUM_OCCURRENCES = 'NUM_OCCURRENCES'  # stop after number of occurrences
-    STOP_AFTER_DATE = 'STOP_AFTER_DATE'  # after after a date
-    ALL = ((NEVER, NEVER),
-           (NUM_OCCURRENCES, NUM_OCCURRENCES),
-           (STOP_AFTER_DATE, STOP_AFTER_DATE)
-           )

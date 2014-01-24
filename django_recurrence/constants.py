@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
 from dateutil.rrule import YEARLY, MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY, \
                            SECONDLY
