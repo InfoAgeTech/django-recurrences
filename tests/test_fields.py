@@ -4,6 +4,7 @@ from django_recurrence.constants import Frequency
 from django.http.request import QueryDict
 from django.utils.http import urlencode
 from datetime import datetime
+from django_recurrence.constants import Day
 
 
 class FormFieldRecurrenceValidTests(TestCase):
@@ -148,17 +149,20 @@ class FormFieldRecurrenceValidTests(TestCase):
 
     def test_recurrence_byweekday(self):
         """Test a form is valid when a week day is passed."""
+        monday = Day.MONDAY.weekday
+        saturday = Day.SATURDAY.weekday
         query_string = urlencode({
             'recurrence_freq': Frequency.WEEKLY,
             'recurrence_ending': 'count',
-            'recurrence_byweekday': 2,
+            'recurrence_byweekday': monday,
             'recurrence_count': 5
         })
-        query_string += '&recurrence_byweekday=5'
+        query_string += '&recurrence_byweekday={0}'.format(saturday)
         data = QueryDict(query_string)
         form = TestRecurrenceForm(data=data)
         self.assertTrue(form.is_valid(), msg=form.errors)
-        self.assertEqual(form.cleaned_data['recurrence'].byweekday, [2, 5])
+        self.assertEqual(form.cleaned_data['recurrence'].byweekday,
+                         [monday, saturday])
 
     def test_recurrence_byhour(self):
         """Test a form is valid when a by hour is passed."""
