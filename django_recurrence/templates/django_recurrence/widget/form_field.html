@@ -1,0 +1,16 @@
+{% spaceless %}
+<div class="recurrence-field {{ name }}-{{ widget_name }} form-group">
+    
+    {% if label != None %}
+        <label class="control-label col-sm-3 col-lg-3">{{ label }}</label>
+    {% endif %}
+    
+    <div class="{% if label == None %}no-label{% else %}col-sm-9 col-lg-9{% endif %}">
+        {% if pre_widget_html %}{{ pre_widget_html|safe }}{% endif %}
+        {{ widget_html }}
+        {% if post_widget_html %}{{ post_widget_html|safe }}{% endif %}
+        {% if help_text %}<p class="help-block">{{ help_text }}</p>{% endif %}
+    </div>
+    
+</div>
+{% endspaceless %}

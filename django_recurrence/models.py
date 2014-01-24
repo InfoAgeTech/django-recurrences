@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 from dateutil.rrule import rrule
 from django.db import models
 from django.utils.translation import ugettext as _
@@ -72,6 +74,9 @@ BY_YEAR_DAY_HELP_TEXT = _('Comma separated list of year days to apply the '
                           '1st and 300th day of the year. If you want the '
                           'last day of the year, use the value -1 in your '
                           'list, second to last day -2 and so fourth.')
+BY_WEEK_NUMBER_HELP_TEXT = _('Comma separated list of week numbers to apply '
+                          'the recurrence to. A value of "1, 50" would be the '
+                          '1st and 50th weeks of the year.')
 
 
 class AbstractRecurrenceModelMixin(models.Model):
@@ -89,14 +94,20 @@ class AbstractRecurrenceModelMixin(models.Model):
     # Recurrence Rule fields
     freq = models.PositiveIntegerField(choices=Frequency.CHOICES, blank=True,
                                        null=True)
-    interval = models.PositiveIntegerField(default=1, blank=True, null=True)
-    wkst = models.PositiveIntegerField(choices=Day.CHOICES, blank=True,
+    interval = models.PositiveIntegerField(choices=ONE_TO_31, default=1,
+                                           blank=True, null=True)
+    wkst = models.PositiveIntegerField(verbose_name=_('Week Start Day'),
+                                       choices=Day.CHOICES, blank=True,
                                        null=True)
     count = models.PositiveIntegerField(verbose_name=_('Total Occurrences'),
                                         blank=True, null=True)
     bysetpos = IntegerListField(verbose_name=_('By Set Position'),
                                 choices=BY_SET_POS_CHOICES, max_length=25,
                                 blank=True, null=True)
+    byyearday = IntegerListField(verbose_name=_('By Year Day'),
+                                 choices=BY_YEAR_DAY_CHOICES, max_length=1500,
+                                 blank=True, null=True,
+                                 help_text=BY_YEAR_DAY_HELP_TEXT)
     bymonth = IntegerListField(verbose_name=_('By Month'),
                                choices=Month.CHOICES_SHORT, max_length=25,
                                blank=True, null=True)
@@ -104,22 +115,20 @@ class AbstractRecurrenceModelMixin(models.Model):
                                   choices=BY_MONTH_DAY_CHOICES, max_length=200,
                                   blank=True, null=True,
                                   help_text=BY_MONTH_DAY_HELP_TEXT)
-    byyearday = IntegerListField(verbose_name=_('By Year Day'),
-                                 choices=BY_YEAR_DAY_CHOICES, max_length=1500,
-                                 blank=True, null=True,
-                                 help_text=BY_YEAR_DAY_HELP_TEXT)
     byweekno = IntegerListField(verbose_name=_('By Week Number'),
                                 choices=ONE_TO_53, max_length=200, blank=True,
-                                null=True)
+                                null=True, help_text=BY_WEEK_NUMBER_HELP_TEXT)
     byweekday = IntegerListField(verbose_name=_('By Weekday'),
                                  choices=Day.CHOICES, max_length=25,
                                  blank=True, null=True)
     byhour = IntegerListField(verbose_name=_('By Hour'), choices=ZERO_TO_59,
                               max_length=200, blank=True, null=True)
-    byminute = IntegerListField(verbose_name=_('By Minute'), choices=ZERO_TO_59,
-                                max_length=200, blank=True, null=True)
-    bysecond = IntegerListField(verbose_name=_('By Second'), choices=ZERO_TO_59,
-                                max_length=200, blank=True, null=True)
+    byminute = IntegerListField(verbose_name=_('By Minute'),
+                                choices=ZERO_TO_59, max_length=200, blank=True,
+                                null=True)
+    bysecond = IntegerListField(verbose_name=_('By Second'),
+                                choices=ZERO_TO_59, max_length=200, blank=True,
+                                null=True)
     byeaster = IntegerListField(verbose_name=_('By Easter'), max_length=100,
                                 blank=True, null=True)
 
@@ -153,72 +162,66 @@ class AbstractRecurrenceModelMixin(models.Model):
 
     def set_recurrence(self, freq, start_date, end_date=None, interval=1,
                        count=None, **kwargs):
-        """
+        """The doc below is pretty much the same as the doc on the
+        python-dateutils page:
+
+        @see http://labix.org/python-dateutil
+
         :param freq: freq must be one of YEARLY (0), MONTHLY (1), WEEKLY (2),
             DAILY (3), HOURLY (4), MINUTELY (5), or SECONDLY (6)
         :param interval: The interval between each freq iteration. For example,
-                         when using YEARLY, an interval of 2 means once every
-                         two years, but with HOURLY, it means once every two
-                         hours. The default interval is 1.
+            when using YEARLY, an interval of 2 means once every two years, but
+            with HOURLY, it means once every two hours. The default interval is
+            1.
         :param wkst. The week start day. Must be one of the MO, TU, WE
-                     constants, or an integer, specifying the first day of the
-                     week. This will affect recurrences based on weekly
-                     periods. The default week start is got from
-                     calendar.firstweekday(), and may be modified by
-                     calendar.setfirstweekday().
+            constants, or an integer, specifying the first day of the week.
+            This will affect recurrences based on weekly periods. The default
+            week start is got from calendar.firstweekday(), and may be modified
+            by calendar.setfirstweekday().
         :param count: How many occurrences will be generated.
         :param end_date: If given, this must be a datetime instance, that will
-                      specify the limit of the recurrence. If a recurrence
-                      instance happens to be the same as the datetime instance
-                      given in the until keyword, this will be the last
-                      occurrence.
+            specify the limit of the recurrence. If a recurrence instance
+            happens to be the same as the datetime instance given in the until
+            keyword, this will be the last occurrence.
         :param bysetpos: If given, it must be either an integer, or a sequence
-                         of integers, positive or negative. Each given integer
-                         will specify an occurrence number, corresponding to
-                         the nth occurrence of the rule inside the frequency
-                         period. For example, a bysetpos of -1 if combined with
-                         a MONTHLY frequency, and a byweekday of (MO, TU, WE,
-                         TH, FR), will result in the last work day of every
-                         month.
-        :param bymonth: If given, it must be either an integer, or a sequence of
-                        integers, meaning the months to apply the recurrence to.
-        :param bymonthday: If given, it must be either an integer, or a sequence
-                           of integers, meaning the month days to apply the
-                           recurrence to.
+            of integers, positive or negative. Each given integer will specify
+            an occurrence number, corresponding to the nth occurrence of the
+            rule inside the frequency period. For example, a bysetpos of -1 if
+            combined with a MONTHLY frequency, and a byweekday of (MO, TU, WE,
+            TH, FR), will result in the last work day of every month.
+        :param bymonth: If given, it must be either an integer, or a sequence
+            of integers, meaning the months to apply the recurrence to.
+        :param bymonthday: If given, it must be either an integer, or a
+            sequence of integers, meaning the month days to apply the
+            recurrence to.
         :param byyearday: If given, it must be either an integer, or a sequence
-                          of integers, meaning the year days to apply the
-                          recurrence to.
+            of integers, meaning the year days to apply the recurrence to.
         :param byweekno: If given, it must be either an integer, or a sequence
-                         of integers, meaning the week numbers to apply the
-                         recurrence to. Week numbers have the meaning described
-                         in ISO8601, that is, the first week of the year is that
-                         containing at least four days of the new year.
+            of integers, meaning the week numbers to apply the recurrence to.
+            Week numbers have the meaning described in ISO8601, that is, the
+            first week of the year is that containing at least four days of the
+            new year.
         :param byweekday: If given, it must be either an integer (0 == MO), a
-                          sequence of integers, one of the weekday constants
-                          (MO, TU, etc), or a sequence of these constants. When
-                          given, these variables will define the weekdays where
-                          the recurrence will be applied. It's also possible to
-                          use an argument n for the weekday instances, which
-                          will mean the nth occurrence of this weekday in the
-                          period. For example, with MONTHLY, or with YEARLY and
-                          BYMONTH, using FR(+1) in byweekday will specify the
-                          first friday of the month where the recurrence
-                          happens. Notice that in the RFC documentation, this
-                          is specified as BYDAY, but was renamed to avoid the
-                          ambiguity of that keyword.
+            sequence of integers, one of the weekday constants (MO, TU, etc),
+            or a sequence of these constants. When given, these variables will
+            define the weekdays where the recurrence will be applied. It's also
+            possible to use an argument n for the weekday instances, which will
+            mean the nth occurrence of this weekday in the period. For example,
+            with MONTHLY, or with YEARLY and BYMONTH, using FR(+1) in byweekday
+            will specify the first friday of the month where the recurrence
+            happens. Notice that in the RFC documentation, this is specified as
+            BYDAY, but was renamed to avoid the ambiguity of that keyword.
         :param byhour: If given, it must be either an integer, or a sequence of
-                       integers, meaning the hours to apply the recurrence to.
+            integers, meaning the hours to apply the recurrence to.
         :param byminute: If given, it must be either an integer, or a sequence
-                         of integers, meaning the minutes to apply the
-                         recurrence to.
+            of integers, meaning the minutes to apply the recurrence to.
         :param bysecond: If given, it must be either an integer, or a sequence
-                         of integers, meaning the seconds to apply the
-                         recurrence to.
+            of integers, meaning the seconds to apply the recurrence to.
         :param byeaster: If given, it must be either an integer, or a sequence
-                         of integers, positive or negative. Each integer will
-                         define an offset from the Easter Sunday. Passing the
-                         offset 0 to byeaster will yield the Easter Sunday
-                         itself. This is an extension to the RFC specification.
+            of integers, positive or negative. Each integer will define an
+            offset from the Easter Sunday. Passing the offset 0 to byeaster
+            will yield the Easter Sunday itself. This is an extension to the
+            RFC specification.
 
         Examples:
 
@@ -242,8 +245,6 @@ class AbstractRecurrenceModelMixin(models.Model):
          datetime.datetime(2011, 2, 28, 0, 0),
          datetime.datetime(2011, 3, 31, 0, 0)]
 
-
-        @see http://labix.org/python-dateutil#head-470fa22b2db72000d7abe698a5783a46b0731b57
         """
         # Set or reset all recurrence fields
         exclude_fields = ['dtstart', 'until', 'freq', 'interval', 'count']
@@ -322,22 +323,22 @@ class AbstractRecurrenceModelMixin(models.Model):
 
         Freq values:
 
-            0 = YEARLY
-            1 = MONTHLY
-            2 = WEEKLY
-            3 = DAILY
-            4 = HOURLY
-            5 = MINUTELY
-            6 = SECONDLY
+        * 0 = YEARLY
+        * 1 = MONTHLY
+        * 2 = WEEKLY
+        * 3 = DAILY
+        * 4 = HOURLY
+        * 5 = MINUTELY
+        * 6 = SECONDLY
 
         Format:
 
-            {{ OCCURRENCE }}, {{ START_DATE }} - {{ END_DATE }}
+        * {{ OCCURRENCE }}, {{ START_DATE }} - {{ END_DATE }}
 
         Examples:
 
-            'Every Tuesday and Thursday, Nov. 1, 2011 - Nov. 10, 2011'
-            'Daily, Nov. 1, 2011 - Nov. 10, 2011'
+        * 'Every Tuesday and Thursday, Nov. 1, 2011 - Nov. 10, 2011'
+        * 'Daily, Nov. 1, 2011 - Nov. 10, 2011'
 
         """
         def _get_weekday_str(weekdays):
@@ -367,7 +368,7 @@ class AbstractRecurrenceModelMixin(models.Model):
                 if i < len(days) - 2:
                     weekday_str += u', '
                 elif i == len(days) - 2:
-                    weekday_str += u' and '
+                    weekday_str += _(' and ')
 
             return weekday_str
 
@@ -378,26 +379,27 @@ class AbstractRecurrenceModelMixin(models.Model):
                                         self.start_date.strftime(date_format),
                                         self.count)
         elif self.is_recurring:
-            to_from = u'{0} - {1}'.format(
+            to_from = '{0} - {1}'.format(
                                         self.start_date.strftime(date_format),
                                         self.end_date.strftime(date_format))
         else:
-            to_from = u''
+            to_from = ''
 
         freq = self.freq
         if freq == Frequency.YEARLY:
-            frequency = u'Every year'
+            frequency = _('Every year')
         elif freq == Frequency.MONTHLY:
-            frequency = u'Every month'
+            frequency = _('Every month')
         elif freq == Frequency.WEEKLY:
             weekday_str = _get_weekday_str(self.byweekday) \
                           if self.byweekday else u'week'
-            frequency = u'Every {0}'.format(weekday_str)
+            frequency = _('Every {0}').format(weekday_str)
         elif freq == Frequency.DAILY:
-            frequency = u'Everyday'
+            frequency = _('Everyday')
         elif freq == Frequency.HOURLY:
-            frequency = u'Every hour'
+            frequency = _('Every hour')
 
         if to_from:
-            return u'{0}, {1}'.format(frequency, to_from)
-        return u'{0}'.format(frequency)
+            return '{0}, {1}'.format(frequency, to_from)
+
+        return '{0}'.format(frequency)
