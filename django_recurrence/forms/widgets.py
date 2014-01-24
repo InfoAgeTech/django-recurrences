@@ -9,12 +9,19 @@ from django_recurrence.rrule import Recurrence
 
 class FrequencyWidget(MultiWidget):
 
-    def __init__(self, keyed_widgets, attrs=None, *args, **kwargs):
+    def __init__(self, keyed_widgets, attrs=None, label_overrides=None, *args,
+                 **kwargs):
         """
+
         :param keyed_widgets: an OrderedDict of rrule field names as the key
             and the widget as the value.
+        :param label_overrides: dict of rrule field widget labels to override.
+            A value of None will not even render a label field.  A value of ''
+            will render an empty label field.
         """
         self.keyed_widgets = keyed_widgets
+        self.label_overrides = label_overrides
+        self.labels = self.get_widget_labels()
         self.key_order = [k for k in keyed_widgets.keys()]
         widgets = [w for w in keyed_widgets.values()]
         super(FrequencyWidget, self).__init__(widgets=widgets, attrs=attrs,
@@ -75,14 +82,17 @@ class FrequencyWidget(MultiWidget):
 
         return Recurrence(**recurrence_kwargs)
 
-    def get_widget_label_defaults(self, overrides=None):
+    def get_widget_labels(self):
         """
         :param overrides: dict of value labels to override. Key is the rrule
             field name.
         """
-        return {
+        if getattr(self, 'labels', None):
+            return self.labels
+
+        labels = {
             'dtstart': 'Starting',
-            'freq': None,
+            'freq': 'Frequency',
             'interval': 'Every',
             'wkst': 'Week Start',
             'count': None,
@@ -99,13 +109,16 @@ class FrequencyWidget(MultiWidget):
             'byeaster': 'By easter'
         }
 
+        if self.label_overrides:
+            labels.update(self.label_overrides)
+
+        return labels
+
     def render(self, name, value, attrs=None):
         """Render the html for the widget."""
 
         if not isinstance(value, Recurrence):
             value = self.decompress(value)
-
-        labels = self.get_widget_label_defaults()
 
         rendered_html = []
 
@@ -116,9 +129,9 @@ class FrequencyWidget(MultiWidget):
                 continue
 
             rendered_html.append(self.render_field(name=name, value=value,
-                                                widget_name=widget_name,
-                                                widget=widget,
-                                                label=labels.get(widget_name)))
+                                        widget_name=widget_name,
+                                        widget=widget,
+                                        label=self.labels.get(widget_name)))
 
         # Here's where "count" and "until" get rendered
         ending_html = self.render_ending(name=name, value=value, attrs=attrs)

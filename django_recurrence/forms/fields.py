@@ -23,7 +23,7 @@ class RecurrenceField(MultiValueField):
     """
 
     def __init__(self, key_order=None, field_widgets=None, only=None,
-                 exclude=None, *args, **kwargs):
+                 exclude=None, label_overrides=None, *args, **kwargs):
         """
         :param key_order: list of rrule keys that will define the display
             order.
@@ -31,8 +31,10 @@ class RecurrenceField(MultiValueField):
             override the default widget.
         :param only: list of rrule field to only include
         :param exclude: list of rrule fields to exclude
+        :param labels: dict override on the widget labels.
         """
-        self.keyed_fields = get_rrule_form_fields(field_widgets=field_widgets,
+        self.keyed_fields = get_rrule_form_fields(key_order=key_order,
+                                                  field_widgets=field_widgets,
                                                   only=only,
                                                   exclude=exclude)
         self.key_order = [fld_name for fld_name in self.keyed_fields.keys()]
@@ -44,7 +46,8 @@ class RecurrenceField(MultiValueField):
             field.widget.help_text = field.help_text
             keyed_widgets[name] = field.widget
 
-        widget = FrequencyWidget(keyed_widgets=keyed_widgets)
+        widget = FrequencyWidget(keyed_widgets=keyed_widgets,
+                                 label_overrides=label_overrides)
         super(RecurrenceField, self).__init__(fields=fields, widget=widget,
                                               *args, **kwargs)
 

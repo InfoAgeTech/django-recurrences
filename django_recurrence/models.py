@@ -75,6 +75,20 @@ BY_YEAR_DAY_HELP_TEXT = _('Comma separated list of year days to apply the '
 BY_WEEK_NUMBER_HELP_TEXT = _('Comma separated list of week numbers to apply '
                           'the recurrence to. A value of "1, 50" would be the '
                           '1st and 50th weeks of the year.')
+BY_HOUR_HELP_TEXT = _('Integer or comma separated list of hour integers to '
+                      'apply the recurrence to. "20, 22" would mean only '
+                      'apply to the 20th and 22nd hours of a datetime '
+                      'recurrence.')
+BY_MINUTE_HELP_TEXT = _('Integer or comma separated list of minute integers '
+                        'to apply the recurrence to. "20, 45" would mean only '
+                        'apply to the 20th and 45th minutes of a datetime '
+                        'recurrence.')
+BY_SECOND_HELP_TEXT = _('Integer or comma separated list of seconds integers '
+                      'to apply the recurrence to.  "20, 45" would mean only '
+                      'apply to the 20th and 45th seconds of a datetime '
+                      'recurrence.')
+BY_EASTER_HELP_TEXT = _('Integer or comma separated list of integers which '
+                        'define an offset from the Easter Sunday.')
 
 
 class AbstractRecurrenceModelMixin(models.Model):
@@ -120,15 +134,17 @@ class AbstractRecurrenceModelMixin(models.Model):
                                  choices=Day.CHOICES, max_length=25,
                                  blank=True, null=True)
     byhour = IntegerListField(verbose_name=_('By Hour'), choices=ZERO_TO_59,
-                              max_length=200, blank=True, null=True)
+                              max_length=200, blank=True, null=True,
+                              help_text=BY_HOUR_HELP_TEXT)
     byminute = IntegerListField(verbose_name=_('By Minute'),
                                 choices=ZERO_TO_59, max_length=200, blank=True,
-                                null=True)
+                                null=True, help_text=BY_MINUTE_HELP_TEXT)
     bysecond = IntegerListField(verbose_name=_('By Second'),
                                 choices=ZERO_TO_59, max_length=200, blank=True,
-                                null=True)
+                                null=True, help_text=BY_SECOND_HELP_TEXT)
     byeaster = IntegerListField(verbose_name=_('By Easter'), max_length=100,
-                                blank=True, null=True)
+                                blank=True, null=True,
+                                help_text=BY_EASTER_HELP_TEXT)
 
     objects = RecurrenceManager()
 
