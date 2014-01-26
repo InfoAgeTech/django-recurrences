@@ -7,3 +7,4 @@
 *.db
 .coverage
 __pycache__
+docs/guide
