@@ -1,6 +1,8 @@
 NOTE: This is not stable yet and will likely change!  Please don't use in
 production until the 1.0 release.
 
+Possible name change to: django-recurrences
+
 .. |travisci| image:: https://travis-ci.org/InfoAgeTech/django-recurrence.png?branch=master
   :target: http://travis-ci.org/InfoAgeTech/django-recurrence
 .. |coveralls| image:: https://coveralls.io/repos/InfoAgeTech/django-recurrence/badge.png?branch=master
