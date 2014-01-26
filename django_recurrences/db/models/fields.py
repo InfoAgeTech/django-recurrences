@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django_core.models.fields import JSONField
 
-from django_recurrence.rrule import Recurrence
+from ...rrule import Recurrence
 
 
 class RecurrenceField(JSONField):

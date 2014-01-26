@@ -1,6 +1,6 @@
 from django import forms
-from django_recurrence.constants import Frequency
-from django_recurrence.forms.fields import RecurrenceField
+from django_recurrences.constants import Frequency
+from django_recurrences.forms.fields import RecurrenceField
 
 
 class TestRecurrenceForm(forms.Form):

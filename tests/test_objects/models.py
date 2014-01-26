@@ -1,4 +1,4 @@
-from django_recurrence.models import AbstractRecurrenceModelMixin
+from django_recurrences.models import AbstractRecurrenceModelMixin
 
 
 class RecurrenceTestModel(AbstractRecurrenceModelMixin):

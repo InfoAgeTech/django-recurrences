@@ -1,10 +1,10 @@
 from django.test import TestCase
 from tests.test_objects.forms import TestRecurrenceForm
-from django_recurrence.constants import Frequency
+from django_recurrences.constants import Frequency
 from django.http.request import QueryDict
 from django.utils.http import urlencode
 from datetime import datetime
-from django_recurrence.constants import Day
+from django_recurrences.constants import Day
 
 
 class FormFieldRecurrenceValidTests(TestCase):

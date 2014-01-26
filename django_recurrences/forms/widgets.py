@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 from django.forms.widgets import MultiWidget
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
-from django_recurrence.constants import Frequency
-from django_recurrence.rrule import Recurrence
+
+from ..constants import Frequency
+from ..rrule import Recurrence
 
 
 class FrequencyWidget(MultiWidget):
@@ -174,7 +175,7 @@ class FrequencyWidget(MultiWidget):
         if getattr(widget, 'help_text', None) and widget.help_text:
             context['help_text'] = widget.help_text
 
-        return render_to_string('django_recurrence/widget/form_field.html',
+        return render_to_string('django_recurrences/widget/form_field.html',
                                 context)
 
     def render_ending(self, name, value, attrs=None):
@@ -194,5 +195,5 @@ class FrequencyWidget(MultiWidget):
                    'until_html': until_widget_html,
                    'label': 'Ending'}
 
-        return render_to_string('django_recurrence/widget/ending.html',
+        return render_to_string('django_recurrences/widget/ending.html',
                                 context)

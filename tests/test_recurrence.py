@@ -3,8 +3,8 @@ from datetime import datetime
 from dateutil.rrule import DAILY
 from dateutil.rrule import WE, TH
 from django.test import TestCase
-from django_recurrence.constants import Frequency
-from django_recurrence.rrule import Recurrence
+from django_recurrences.constants import Frequency
+from django_recurrences.rrule import Recurrence
 
 from tests.test_objects.models import RecurrenceTestModel
 

@@ -23,7 +23,7 @@ USE_I18N = True
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django_recurrence',
+    'django_recurrences',
     'django_nose',
     'python_dates',
     'test_objects',  # adding as an installed app so testing models get picked up.

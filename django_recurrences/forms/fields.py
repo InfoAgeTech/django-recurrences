@@ -8,18 +8,18 @@ from django.forms.widgets import CheckboxSelectMultiple
 from django.forms.widgets import Select
 from django_core.forms.widgets import CommaSeparatedListWidget
 from django_core.forms.widgets import Html5DateInput
-from django_recurrence.constants import Day
-from django_recurrence.constants import Month
-from django_recurrence.models import BY_SET_POS_CHOICES
-from django_recurrence.models import ONE_TO_31
 
+from ..constants import Day
+from ..constants import Month
 from ..forms.choices import FREQUENCY_CHOICES
-from .widgets import FrequencyWidget
+from ..forms.widgets import FrequencyWidget
+from ..models import BY_SET_POS_CHOICES
+from ..models import ONE_TO_31
 
 
 class RecurrenceField(MultiValueField):
     """Form field that handles recurrence and returns a
-    django_recurrence.db.models.fields.Recurrence field.
+    django_recurrences.db.models.fields.Recurrence field.
     """
 
     def __init__(self, key_order=None, field_widgets=None, only=None,
@@ -138,7 +138,7 @@ def get_rrule_form_fields(key_order=None, field_widgets=None, only=None,
     # to get the widget order.
     fields = OrderedDict([])
 
-    from django_recurrence.models import AbstractRecurrenceModelMixin
+    from django_recurrences.models import AbstractRecurrenceModelMixin
     meta = AbstractRecurrenceModelMixin._meta
 
     for field_name in key_order:
