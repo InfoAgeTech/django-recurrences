@@ -20,7 +20,7 @@ classifiers = [
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 setup(
-    name='django-recurrence',
+    name='django-recurrences',
     version='0.0.1',
     description='Recurrence app for django',
     long_description=README,
