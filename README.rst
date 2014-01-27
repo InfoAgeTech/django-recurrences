@@ -13,7 +13,8 @@ django-recurrences is a python recurrence module written for django.
 
 Docs
 ====
-TODO
+
+http://django-recurrences.readthedocs.org
 
 Intallation
 ===========
