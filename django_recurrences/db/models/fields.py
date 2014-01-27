@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django_core.models.fields import JSONField
+from django_core.db.models.fields import JSONField
 
 from ...rrule import Recurrence
 
