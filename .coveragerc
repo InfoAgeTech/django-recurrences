@@ -3,7 +3,7 @@
 
 [run]
 omit = */*urls.py,*__init__.py
-include = */django_recurrence/*
+include = */django_recurrences/*
 
 [report]
 # Regexes for lines to exclude from consideration
