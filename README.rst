@@ -22,7 +22,7 @@ http://django-recurrences.readthedocs.org
 
 Intallation
 ===========
-Install from pypi::
+Install from `pypi <https://pypi.python.org/pypi/django-recurrences>`_ via pip::
 
    pip install django-recurrences
 

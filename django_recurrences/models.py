@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from dateutil.rrule import rrule
 from django.db import models
 from django.utils.translation import ugettext as _
-from django_core.models.fields import IntegerListField
+from django_core.db.models.fields import IntegerListField
 from python_dates.converters import int_to_weekday
 
 from .constants import Day
