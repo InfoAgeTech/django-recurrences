@@ -3,4 +3,4 @@ Intallation
 ===========
 Install the app:: 
 
-   pip install django-shares
+   pip install django-recurrences

@@ -1,6 +1,6 @@
 ========
 Examples
 ========
-Below are some basic examples on how to use django-shares::
+Below are some basic examples on how to use django-recurrences::
 
     >>> # TODO

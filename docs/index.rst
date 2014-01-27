@@ -1,5 +1,5 @@
-Welcome to django-shares documentation!
-=======================================
+Welcome to django-recurrences documentation!
+============================================
 
 .. toctree::
    :maxdepth: 2
