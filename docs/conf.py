@@ -10,9 +10,12 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
+from __future__ import unicode_literals
 
+from datetime import date
 import os
 import sys
+
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.settings'
 
@@ -52,8 +55,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'django-recurrences'
-copyright = u'2013, Troy Grosfield'
+project = 'django-recurrences'
+copyright = '{0}, Troy Grosfield'.format(date.today().year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -195,8 +198,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'django-recurrences.tex', u'django-recurrences Documentation',
-   u'Troy Grosfield', 'manual'),
+  ('index', 'django-recurrences.tex', 'django-recurrences Documentation',
+   'Troy Grosfield', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -225,7 +228,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'django-recurrences', u'django-recurrences Documentation',
+    ('index', 'django-recurrences', 'django-recurrences Documentation',
      [u'Troy Grosfield'], 1)
 ]
 
@@ -239,8 +242,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'django-recurrences', u'django-recurrences Documentation',
-   u'Troy Grosfield', 'django-recurrences', 'One line description of project.',
+  ('index', 'django-recurrences', 'django-recurrences Documentation',
+   'Troy Grosfield', 'django-recurrences', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -257,10 +260,10 @@ texinfo_documents = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'django-recurrences'
-epub_author = u'Troy Grosfield'
-epub_publisher = u'Troy Grosfield'
-epub_copyright = u'2013, Troy Grosfield'
+epub_title = 'django-recurrences'
+epub_author = 'Troy Grosfield'
+epub_publisher = 'Troy Grosfield'
+epub_copyright = '{0}, Troy Grosfield'.format(date.today().year)
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.
