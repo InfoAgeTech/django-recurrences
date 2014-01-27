@@ -8,7 +8,7 @@ production until the 1.0 release.
 .. image:: https://badge.fury.io/py/django-recurrences.png
     :target: http://badge.fury.io/py/django-recurrences
 .. image:: https://pypip.in/license/django-recurrences/badge.png
-    :target: https://pypi.python.org/pypi/django-recurrences/
+    :target: https://github.com/InfoAgeTech/django-recurrences/blob/master/LICENSE
 
 ==================
 django-recurrences
