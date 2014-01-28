@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 from django import forms
 from django.forms.widgets import CheckboxSelectMultiple
 
-from ..db.models.fields import RecurrenceField
 from ..forms.choices import FREQUENCY_CHOICES
 from ..forms.choices import WEEKDAY_CHOICES
+from ..forms.fields import RecurrenceField
 
 
 # TODO: This should go away not that I have the RecurrenceField?
