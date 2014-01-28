@@ -92,12 +92,12 @@ BY_EASTER_HELP_TEXT = _('Integer or comma separated list of integers which '
 
 
 class AbstractRecurrenceModelMixin(models.Model):
-    """A model mixin for recurrence.
+    """A model mixin for recurrence based on rrule.
 
     For rules see:
 
     * http://www.ietf.org/rfc/rfc2445.txt
-    * http://labix.org/python-dateutil#head-cf004ee9a75592797e076752b2a889c10f445418
+    * http://labix.org/python-dateutil
     """
 
     start_date = models.DateTimeField()
@@ -292,7 +292,7 @@ class AbstractRecurrenceModelMixin(models.Model):
         """Gets all the recurrence field names as define by:
 
         * http://www.ietf.org/rfc/rfc2445.txt
-        * http://labix.org/python-dateutil#head-cf004ee9a75592797e076752b2a889c10f445418
+        * http://labix.org/python-dateutil
 
         :params exclude_fields: list of fields to exclude.
         """
@@ -417,3 +417,7 @@ class AbstractRecurrenceModelMixin(models.Model):
             return '{0}, {1}'.format(frequency, to_from)
 
         return '{0}'.format(frequency)
+
+
+class Recurrence(AbstractRecurrenceModelMixin):
+    """Concrete implementation for recurrence base on rrule."""
