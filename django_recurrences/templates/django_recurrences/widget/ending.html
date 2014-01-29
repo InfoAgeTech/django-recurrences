@@ -1,5 +1,5 @@
 {% spaceless %}
-<div class="recurrence-field {{ name }}-ending form-group">
+<div class="recurrence-field recurrence-ending form-group">
 
     <label class="control-label col-sm-3 col-lg-3">
         {{ label }}
@@ -7,12 +7,12 @@
 
     <div class="col-sm-9 col-lg-9 input-container">
         <div>
-            <input id="id_{{ name }}_count" type="radio" name="{{ name }}-ending" value="count" />&nbsp;
-            <label for="id_{{ name }}_count">after {{ count_html }} occurrences</label>
+            <input id="id_{{ name }}_ending_count" type="radio" name="{{ name }}-ending" value="count" />&nbsp;
+            <label for="id_{{ name }}_ending_count">after {{ count_html }} occurrences</label>
         </div>
         <div>
-            <input id="id_{{ name }}_until" type="radio" name="{{ name }}-ending" value="until" />&nbsp;
-            <label for="id_{{ name }}_until">on {{ until_html }}</label>
+            <input id="id_{{ name }}_ending_until" type="radio" name="{{ name }}-ending" value="until" />&nbsp;
+            <label for="id_{{ name }}_ending_until">on {{ until_html }}</label>
         </div>
     </div>
 

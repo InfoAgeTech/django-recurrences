@@ -30,9 +30,31 @@ Dependencies
 ============
 TODO
 
-Examples
-========
-TODO
+Recurrence Form Widget
+======================
+This app contains default styling and javascript functionality for you to use if you choose.  It's not included by default so if you use a asset library, like `django-pipeline <https://github.com/cyberdelia/django-pipeline>`_, you can add it into the pipline settings.
+
+One way to leverage the css and js for the widget is to add it to your pipeline settings file::
+
+    PIPELINE_CSS = {
+      'standard': {
+           'source_filenames': (
+               'django_recurrences/less/recurrence_widget.less',
+                ... your other less or css ...
+           ),
+        'output_filename': 'css/your-file-name-min.css',
+      }
+   }
+   
+   PIPELINE_JS = {
+       'standard': {
+           'source_filenames': (
+               'django_recurrences/js/recurrence_widget.js',
+               ... your other js ...
+           ),
+           'output_filename': 'js/your-file-name-min.js',
+       }
+   }
 
 Tests
 =====

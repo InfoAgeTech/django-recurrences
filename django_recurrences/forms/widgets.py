@@ -146,8 +146,8 @@ class FrequencyWidget(MultiWidget):
 
         all_widget_html = ''.join(rendered_html)
 
-        return mark_safe('<div class="recurrence-widget">{0}</div>'.format(
-                                                            all_widget_html))
+        return mark_safe('<div class="recurrence-widget {0}-recurrence">'
+                         '{1}</div>'.format(name, all_widget_html))
 
     def render_field(self, name, value, widget_name, widget, label=None):
         """Renders a widget field."""
@@ -157,8 +157,10 @@ class FrequencyWidget(MultiWidget):
         if label != None:
             context['label'] = label
 
-        if widget_name not in ('bymonth', 'byweekday', 'interval'):
-            widget_attrs['class'] = 'form-control'
+        if widget_name in ('bymonth', 'byweekday', 'interval'):
+            widget_attrs['class'] = widget_name
+        else:
+            widget_attrs['class'] = 'form-control {0}'.format(widget_name)
 
         context['widget_html'] = widget.render(
                                     name='{0}_{1}'.format(name, widget_name),
@@ -169,8 +171,10 @@ class FrequencyWidget(MultiWidget):
             return context['widget_html']
 
         if widget_name == 'interval':
-            context['post_widget_html'] = ('&nbsp;<span id="{0}-interval-lbl">'
-                                           'weeks</span>'.format(name))
+            context['post_widget_html'] = (
+                '&nbsp;<span id="{0}-interval-lbl" class="interval-lbl">'
+                'weeks</span>'.format(name)
+            )
 
         if getattr(widget, 'help_text', None) and widget.help_text:
             context['help_text'] = widget.help_text
