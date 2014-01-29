@@ -1,25 +1,25 @@
 NOTE: This is not stable yet and will likely change!  Please don't use in
 production until the 1.0 release.
 
-.. image:: https://travis-ci.org/InfoAgeTech/django-recurrences.png?branch=master
+.. |travis-ci| image:: https://travis-ci.org/InfoAgeTech/django-recurrences.png?branch=master
     :target: http://travis-ci.org/InfoAgeTech/django-recurrences
-.. image:: https://coveralls.io/repos/InfoAgeTech/django-recurrences/badge.png?branch=master
+    :alt: Travis CI
+.. |coveralls| image:: https://coveralls.io/repos/InfoAgeTech/django-recurrences/badge.png?branch=master
     :target: https://coveralls.io/r/InfoAgeTech/django-recurrences
-.. image:: https://badge.fury.io/py/django-recurrences.png
+    :alt: Code Coverage
+.. |version| image:: https://badge.fury.io/py/django-recurrences.png
     :target: http://badge.fury.io/py/django-recurrences
-.. image:: https://pypip.in/license/django-recurrences/badge.png
+    :alt: Version
+.. |license| image:: https://pypip.in/license/django-recurrences/badge.png
     :target: https://github.com/InfoAgeTech/django-recurrences/blob/master/LICENSE
     :alt: MIT License
+
+|travis-ci| |coveralls| |version| |license| | `Documentation <http://django-recurrences.readthedocs.org>`_
 
 ==================
 django-recurrences
 ==================
 django-recurrences is a python recurrence module written for django.
-
-Docs
-====
-
-http://django-recurrences.readthedocs.org
 
 Intallation
 ===========
