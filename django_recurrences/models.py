@@ -9,86 +9,20 @@ from python_dates.converters import int_to_weekday
 from .constants import Day
 from .constants import Frequency
 from .constants import Month
+from .db.models.choices import BY_MONTH_DAY_CHOICES
+from .db.models.choices import BY_SET_POS_CHOICES
+from .db.models.choices import BY_YEAR_DAY_CHOICES
+from .db.models.choices import ONE_TO_31
+from .db.models.choices import ONE_TO_53
+from .db.models.choices import ZERO_TO_59
+from .db.models.help_text import BY_EASTER_HELP_TEXT
+from .db.models.help_text import BY_HOUR_HELP_TEXT
+from .db.models.help_text import BY_MINUTE_HELP_TEXT
+from .db.models.help_text import BY_MONTH_DAY_HELP_TEXT
+from .db.models.help_text import BY_SECOND_HELP_TEXT
+from .db.models.help_text import BY_WEEK_NUMBER_HELP_TEXT
+from .db.models.help_text import BY_YEAR_DAY_HELP_TEXT
 from .managers import RecurrenceManager
-
-
-def _base_choices(vals, reverse=False):
-    if reverse:
-        return tuple(sorted(vals, key=lambda k:-k[0]))
-
-    return vals
-
-
-def _zero_to_num(num, **kwargs):
-    """Return zero to num in a tuple of tuples.  Num is inclusive.
-
-    >>> _zero_to_num(2)
-    ((0, 0), (1, 1), (2, 2))
-
-    """
-    num += 1
-    vals = tuple((x, x) for x in range(num))
-    return _base_choices(vals, **kwargs)
-
-
-def _one_to_num(num, **kwargs):
-    vals = tuple((x + 1, x + 1) for x in range(num))
-    return _base_choices(vals, **kwargs)
-
-
-def _neg_num_to_zero(num, **kwargs):
-    num -= 1
-    vals = tuple((-x, -x) for x in range(abs(num)))
-    return _base_choices(vals, **kwargs)
-
-
-def _neg_num_to_neg_one(num, **kwargs):
-    vals = tuple((-(x + 1), -(x + 1)) for x in range(abs(num)))
-    return _base_choices(vals, **kwargs)
-
-
-# Choices as defined in http://www.ietf.org/rfc/rfc2445.txt
-ONE_TO_31 = _one_to_num(31)  # Month days
-ONE_TO_53 = _one_to_num(53)  # Week numbers
-ONE_TO_366 = _one_to_num(366)  # Days in year (366 leap year)
-NEG_23_TO_NEG_1 = _neg_num_to_neg_one(-23)
-NEG_31_TO_NEG_1 = _neg_num_to_neg_one(-31)
-NEG_53_TO_NEG_1 = _neg_num_to_neg_one(-53)
-NEG_59_TO_NEG_1 = _neg_num_to_neg_one(-59)
-NEG_366_TO_NEG_1 = _neg_num_to_neg_one(-366)
-ZERO_TO_23 = _zero_to_num(23)  # Hours
-ZERO_TO_59 = _zero_to_num(59)  # Seconds, Minutes
-
-BY_SET_POS_CHOICES = Day.CHOICES + ((-1, -1),)
-BY_MONTH_DAY_CHOICES = ONE_TO_31 + NEG_31_TO_NEG_1
-BY_YEAR_DAY_CHOICES = ONE_TO_366 + NEG_366_TO_NEG_1
-BY_MONTH_DAY_HELP_TEXT = _('Comma separated list of month days to apply the '
-                           'recurrence to. A value of "1, 15" would be the '
-                           '1st and 15th of every month. If you want the '
-                           'last day of the month, use the value -1 in your '
-                           'list, second to last day -2 and so fourth.')
-BY_YEAR_DAY_HELP_TEXT = _('Comma separated list of year days to apply the '
-                          'recurrence to. A value of "1, 300" would be the '
-                          '1st and 300th day of the year. If you want the '
-                          'last day of the year, use the value -1 in your '
-                          'list, second to last day -2 and so fourth.')
-BY_WEEK_NUMBER_HELP_TEXT = _('Comma separated list of week numbers to apply '
-                          'the recurrence to. A value of "1, 50" would be the '
-                          '1st and 50th weeks of the year.')
-BY_HOUR_HELP_TEXT = _('Integer or comma separated list of hour integers to '
-                      'apply the recurrence to. "20, 22" would mean only '
-                      'apply to the 20th and 22nd hours of a datetime '
-                      'recurrence.')
-BY_MINUTE_HELP_TEXT = _('Integer or comma separated list of minute integers '
-                        'to apply the recurrence to. "20, 45" would mean only '
-                        'apply to the 20th and 45th minutes of a datetime '
-                        'recurrence.')
-BY_SECOND_HELP_TEXT = _('Integer or comma separated list of seconds integers '
-                      'to apply the recurrence to.  "20, 45" would mean only '
-                      'apply to the 20th and 45th seconds of a datetime '
-                      'recurrence.')
-BY_EASTER_HELP_TEXT = _('Integer or comma separated list of integers which '
-                        'define an offset from the Easter Sunday.')
 
 
 class AbstractRecurrenceModelMixin(models.Model):

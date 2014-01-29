@@ -11,10 +11,10 @@ from django_core.forms.widgets import Html5DateInput
 
 from ..constants import Day
 from ..constants import Month
+from ..db.models.choices import BY_SET_POS_CHOICES
+from ..db.models.choices import ONE_TO_31
 from ..forms.choices import FREQUENCY_CHOICES
 from ..forms.widgets import FrequencyWidget
-from ..models import BY_SET_POS_CHOICES
-from ..models import ONE_TO_31
 
 
 class RecurrenceField(MultiValueField):
