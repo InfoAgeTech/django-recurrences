@@ -1,7 +1,7 @@
-$(document).ready(function(){
-	/*
-	 * Javascript interaction for the recurrence widget.
-	 */
+/*
+ * Javascript interaction for the recurrence widget.	
+ */
+$(document).ready(function(){	
 	
 	// frequency options
 	var NEVER = -1,
@@ -9,6 +9,21 @@ $(document).ready(function(){
 		MONTHLY = 1,
 		WEEKLY = 2,
 		DAILY = 3;
+	
+	/////////////
+	// Functions
+	/////////////
+	
+	/*
+	 * Functions to run when script is first run.
+	 */
+	function initialize(){
+		$('.recurrence-widget .recurrence-byweekday li label, .recurrence-widget .recurrence-bymonth li label').each(function(index, element){
+			updateCheckboxStyles(this);
+		});
+		
+		$('.recurrence-widget select.freq').change();
+	}
 	
 	/* Update fields that are shown/hidden based on recurrence frequency value.
 	 * 
@@ -48,6 +63,25 @@ $(document).ready(function(){
 		}
 	}
 	
+	/*
+	 * Update the checkbox styles when an item is selected.
+	 * 
+	 * obj: the label being clicked
+	 */
+	function updateCheckboxStyles(obj){
+		var $checkbox = $(obj).find('input[type="checkbox"]:first');
+		
+		if ($checkbox.is(':checked')){
+			$(obj).addClass('selected');
+		} else {
+			$(obj).removeClass('selected');
+		}
+	}
+	
+	//////////////////////
+	// Add event listeners
+	//////////////////////
+	
 	// When the frequency changes, update the field shown
 	$('.recurrence-widget select.freq').on('change', function(e){
 		updateFields($(this));
@@ -79,5 +113,10 @@ $(document).ready(function(){
 		$(this).closest('div').find('input[type="radio"]').click();
 	});
 	
-	$('.recurrence-widget select.freq').change();
+	// Event listener for updating label classes when selecting weekdays or months
+	$('.recurrence-widget .recurrence-byweekday, .recurrence-widget .recurrence-bymonth').on('click', 'li label', function(e){
+		updateCheckboxStyles(this);
+	});
+	
+	initialize();
 });
