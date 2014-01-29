@@ -7,11 +7,11 @@
 
     <div class="col-sm-9 col-lg-9 input-container">
         <div>
-            <input id="id_{{ name }}_ending_count" type="radio" name="{{ name }}-ending" value="count" />&nbsp;
+            <input id="id_{{ name }}_ending_count" type="radio" name="{{ name }}_ending" value="count"{% if ending == 'count' %} checked="checked"{% endif %} />&nbsp;
             <label for="id_{{ name }}_ending_count">after {{ count_html }} occurrences</label>
         </div>
         <div>
-            <input id="id_{{ name }}_ending_until" type="radio" name="{{ name }}-ending" value="until" />&nbsp;
+            <input id="id_{{ name }}_ending_until" type="radio" name="{{ name }}_ending" value="until"{% if ending == 'until' %} checked="checked"{% endif %} />&nbsp;
             <label for="id_{{ name }}_ending_until">on {{ until_html }}</label>
         </div>
     </div>

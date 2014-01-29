@@ -64,7 +64,7 @@ class FrequencyWidget(MultiWidget):
                     'bysetpos'):
             key_value = data.getlist('{0}_{1}'.format(name, key))
 
-            if key_value:
+            if key_value and key_value != ['']:
                 recurrence_kwargs[key] = key_value
 
         return Recurrence(**recurrence_kwargs)
@@ -187,17 +187,24 @@ class FrequencyWidget(MultiWidget):
         count_widget_html = self.keyed_widgets.get('count').render(
                                     name='{0}_count'.format(name),
                                     value=getattr(value, 'count', None),
-                                    attrs={'id': 'id_{0}_count'.format(name)})
+                                    attrs={'id': 'id_{0}_count'.format(name),
+                                           'tabindex': '1'})
 
         until_widget_html = self.keyed_widgets.get('until').render(
                                     name='{0}_until'.format(name),
                                     value=getattr(value, 'until', None),
-                                    attrs={'id': 'id_{0}_until'.format(name)})
+                                    attrs={'id': 'id_{0}_until'.format(name),
+                                           'tabindex': '1'})
 
         context = {'name': name,
                    'count_html': count_widget_html,
                    'until_html': until_widget_html,
                    'label': 'Ending'}
+
+        if value.count != None:
+            context['ending'] = 'count'
+        elif value.until != None:
+            context['ending'] = 'until'
 
         return render_to_string('django_recurrences/widget/ending.html',
                                 context)
