@@ -1,6 +1,5 @@
 from django.db import models
-
-from .constants import Frequency
+from django_recurrences.constants import Frequency
 
 
 class RecurrenceManager(models.Manager):

@@ -9,7 +9,7 @@ from django.utils.six import string_types
 from python_dates.parsers import parse_datetime
 
 
-def _set_datetime_prop(value, prop_name):
+def _get_datetime(value):
     """Helper method to set a date or datetime field.
 
     :param value: the value to set
@@ -21,11 +21,22 @@ def _set_datetime_prop(value, prop_name):
         # Try to parse the date
         return parse_datetime(value)
 
-    raise ValueError('{0} must be None, a date, a datetime, or a '
-                     'parseable date or datetime string.'.format(prop_name))
+    return value
 
 
-def _set_rrule_list_prop(value):
+def _get_int(value):
+    """Try to safely parse a value to int. Otherwise return what was passed in.
+    """
+    if isinstance(value, int) or value == None:
+        return value
+
+    try:
+        return int(value)
+    except:
+        return value
+
+
+def _get_rrule_list(value):
     """Ensures a list is returned for a list property field.
 
     This method allows rrule weekdays of lists or tuples of rrule weekdays to
@@ -48,6 +59,22 @@ def _set_rrule_list_prop(value):
     return list(value) if isinstance(value, collections.Iterable) else [value]
 
 
+def _get_rrule_int_list(value):
+    """Get integer list."""
+    if value == None:
+        return value
+
+    value = _get_rrule_list(value)
+
+    if isinstance(value, (tuple, list)):
+        try:
+            return [int(v) for v in value]
+        except:
+            return value
+
+    return value
+
+
 class Recurrence(object):
     """Represents recurrence for an object based on RRule."""
 
@@ -57,7 +84,7 @@ class Recurrence(object):
 
     @dtstart.setter
     def dtstart(self, value):
-        self._dtstart = _set_datetime_prop(value, 'dtstart')
+        self._dtstart = _get_datetime(value)
 
     @property
     def until(self):
@@ -65,7 +92,7 @@ class Recurrence(object):
 
     @until.setter
     def until(self, value):
-        self._until = _set_datetime_prop(value, 'until')
+        self._until = _get_datetime(value)
 
     @property
     def freq(self):
@@ -105,7 +132,7 @@ class Recurrence(object):
 
     @bysetpos.setter
     def bysetpos(self, value):
-        self._bysetpos = _set_rrule_list_prop(value)
+        self._bysetpos = _get_rrule_int_list(value)
 
     @property
     def bymonth(self):
@@ -113,7 +140,7 @@ class Recurrence(object):
 
     @bymonth.setter
     def bymonth(self, value):
-        self._bymonth = _set_rrule_list_prop(value)
+        self._bymonth = _get_rrule_int_list(value)
 
     @property
     def bymonthday(self):
@@ -121,7 +148,7 @@ class Recurrence(object):
 
     @bymonthday.setter
     def bymonthday(self, value):
-        self._bymonthday = _set_rrule_list_prop(value)
+        self._bymonthday = _get_rrule_int_list(value)
 
     @property
     def byyearday(self):
@@ -129,7 +156,7 @@ class Recurrence(object):
 
     @byyearday.setter
     def byyearday(self, value):
-        self._byyearday = _set_rrule_list_prop(value)
+        self._byyearday = _get_rrule_int_list(value)
 
     @property
     def byweekno(self):
@@ -137,7 +164,7 @@ class Recurrence(object):
 
     @byweekno.setter
     def byweekno(self, value):
-        self._byweekno = _set_rrule_list_prop(value)
+        self._byweekno = _get_rrule_int_list(value)
 
     @property
     def byweekday(self):
@@ -145,7 +172,7 @@ class Recurrence(object):
 
     @byweekday.setter
     def byweekday(self, value):
-        self._byweekday = _set_rrule_list_prop(value)
+        self._byweekday = _get_rrule_int_list(value)
 
     @property
     def byhour(self):
@@ -153,7 +180,7 @@ class Recurrence(object):
 
     @byhour.setter
     def byhour(self, value):
-        self._byhour = _set_rrule_list_prop(value)
+        self._byhour = _get_rrule_int_list(value)
 
     @property
     def byminute(self):
@@ -161,7 +188,7 @@ class Recurrence(object):
 
     @byminute.setter
     def byminute(self, value):
-        self._byminute = _set_rrule_list_prop(value)
+        self._byminute = _get_rrule_int_list(value)
 
     @property
     def bysecond(self):
@@ -169,7 +196,7 @@ class Recurrence(object):
 
     @bysecond.setter
     def bysecond(self, value):
-        self._bysecond = _set_rrule_list_prop(value)
+        self._bysecond = _get_rrule_int_list(value)
 
     @property
     def byeaster(self):
@@ -177,7 +204,7 @@ class Recurrence(object):
 
     @byeaster.setter
     def byeaster(self, value):
-        self._byeaster = _set_rrule_list_prop(value)
+        self._byeaster = _get_rrule_int_list(value)
 
     def __init__(self, freq=None, interval=1, **kwargs):
         """Frequency must be one of:

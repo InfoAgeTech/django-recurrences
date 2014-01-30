@@ -7,7 +7,12 @@ Models
 
 .. automodule:: django_recurrences.models
    :members:
-   
+
+Mixins
+------
+.. automodule:: django_recurrences.db.models.mixins
+   :members:
+
 Fields
 ------
 .. automodule:: django_recurrences.db.models.fields
@@ -34,7 +39,7 @@ Widgets
 Managers
 ========
 
-.. automodule:: django_recurrences.managers
+.. automodule:: django_recurrences.db.models.managers
    :members:
 
 Constants
