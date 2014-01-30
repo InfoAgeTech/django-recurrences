@@ -23,6 +23,7 @@ from .help_text import BY_SECOND_HELP_TEXT
 from .help_text import BY_WEEK_NUMBER_HELP_TEXT
 from .help_text import BY_YEAR_DAY_HELP_TEXT
 from .managers import RecurrenceManager
+from django_recurrences.rrule import Recurrence
 
 
 class AbstractRecurrenceModelMixin(models.Model):
@@ -214,13 +215,36 @@ class AbstractRecurrenceModelMixin(models.Model):
 
     def get_recurrence(self):
         """Returns a dict of all the recurrence fields that have a value."""
-        recurrence = {}
+        recurrence = {'dtstart': self.start_date,
+                      'until': self.end_date}
+
         for field in self.get_recurrence_field_names():
             val = getattr(self, field, None)
             if val != None:
                 recurrence[field] = val
 
-        return recurrence
+        return Recurrence(**recurrence)
+
+    def get_rrule(self):
+        """Gets rrule object based on the recurrence values."""
+        return rrule(**self.get_recurrence().to_dict())
+
+    def is_recurring(self):
+        """Boolean indicating if the object is recurring."""
+        return self.get_recurrence().is_recurring()
+
+    def get_dates(self):
+        """Gets the dates for the frequency using rrule."""
+        if not self.is_recurring():
+            return [self.start_date]
+
+        try:
+            return list(self.get_rrule())
+        except Exception as e:
+            return [self.start_date]
+
+    def get_end_date_from_recurrence(self):
+        return self.get_dates()[-1]
 
     def get_recurrence_field_names(self, exclude_fields=None):
         """Gets all the recurrence field names as define by:
@@ -238,32 +262,6 @@ class AbstractRecurrenceModelMixin(models.Model):
                  'byweekno', 'byweekday', 'byhour', 'byminute', 'bysecond']
         return [field_name for field_name in fields
                 if field_name not in exclude_fields]
-
-    def is_recurring(self):
-        """Boolean indicating if the object is recurring."""
-        recurrence = self.get_recurrence()
-
-        if (not self.start_date or
-            (self.start_date == self.end_date) or
-            ('until' not in recurrence and 'count' not in recurrence)):
-            # Must have a start and an end or there's no recurrence. An end can
-            # also be a count because there's a defined number of occurrences.
-            return False
-
-        return True
-
-    def get_dates(self):
-        """Gets the dates for the frequency using rrule."""
-        if not self.is_recurring():
-            return [self.start_date]
-
-        try:
-            return list(rrule(**self.get_recurrence()))
-        except Exception as e:
-            return [self.start_date]
-
-    def get_end_date_from_recurrence(self):
-        return self.get_dates()[-1]
 
     def recurrence_str(self):
         """
