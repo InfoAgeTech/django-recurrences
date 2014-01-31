@@ -6,7 +6,7 @@ from datetime import datetime
 
 from dateutil.rrule import weekday
 from django.utils.six import string_types
-from python_dates.parsers import parse_datetime
+from django_core.utils.date_parsers import parse_datetime
 
 
 def _get_datetime(value):
