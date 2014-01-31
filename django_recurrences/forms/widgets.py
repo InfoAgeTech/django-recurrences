@@ -184,15 +184,19 @@ class FrequencyWidget(MultiWidget):
 
     def render_ending(self, name, value, attrs=None):
         """Render the ending frequency radio options."""
+        count = getattr(value, 'count', None)
         count_widget_html = self.keyed_widgets.get('count').render(
                                     name='{0}_count'.format(name),
-                                    value=getattr(value, 'count', None),
+                                    value=count,
                                     attrs={'id': 'id_{0}_count'.format(name),
                                            'tabindex': '1'})
 
+        # If there's a value for count then don't set one for end date
+        # (technically they both shouldn't be set)
+        until = getattr(value, 'until', None) if count == None else ''
         until_widget_html = self.keyed_widgets.get('until').render(
                                     name='{0}_until'.format(name),
-                                    value=getattr(value, 'until', None),
+                                    value=until,
                                     attrs={'id': 'id_{0}_until'.format(name),
                                            'tabindex': '1'})
 

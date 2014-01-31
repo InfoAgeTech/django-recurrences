@@ -102,6 +102,10 @@ class AbstractRecurrenceModelMixin(models.Model):
     def until(self, value):
         self.end_date = value
 
+    @property
+    def recurrence(self):
+        return self.get_recurrence()
+
     def save(self, *args, **kwargs):
 
         if not self.end_date:
@@ -225,9 +229,16 @@ class AbstractRecurrenceModelMixin(models.Model):
 
         return Recurrence(**recurrence)
 
-    def get_rrule(self):
-        """Gets rrule object based on the recurrence values."""
-        return rrule(**self.get_recurrence().to_dict())
+    def get_rrule(self, recurrence=None):
+        """Gets rrule object based on the recurrence values.
+
+        :param recurrence: recurrence object to get rrule for. If None, this
+            will generate the recurrence object based on model values.
+        """
+        if not recurrence:
+            recurrence = self.get_recurrence()
+
+        return rrule(**recurrence.to_dict())
 
     def is_recurring(self):
         """Boolean indicating if the object is recurring."""
@@ -235,11 +246,13 @@ class AbstractRecurrenceModelMixin(models.Model):
 
     def get_dates(self):
         """Gets the dates for the frequency using rrule."""
-        if not self.is_recurring():
+        recurrence = self.get_recurrence()
+
+        if not recurrence.is_recurring():
             return [self.start_date]
 
         try:
-            return list(self.get_rrule())
+            return list(self.get_rrule(recurrence=recurrence))
         except Exception as e:
             return [self.start_date]
 

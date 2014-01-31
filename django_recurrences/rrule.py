@@ -27,6 +27,9 @@ def _get_datetime(value):
 def _get_int(value):
     """Try to safely parse a value to int. Otherwise return what was passed in.
     """
+    if isinstance(value, string_types) and not value.strip():
+        return None
+
     if isinstance(value, int) or value == None:
         return value
 
@@ -100,7 +103,7 @@ class Recurrence(object):
 
     @freq.setter
     def freq(self, value):
-        self._freq = int(value) if value != None else None
+        self._freq = _get_int(value)
 
     @property
     def interval(self):
@@ -108,7 +111,7 @@ class Recurrence(object):
 
     @interval.setter
     def interval(self, value):
-        self._interval = int(value) if value != None else None
+        self._interval = _get_int(value)
 
     @property
     def wkst(self):
@@ -116,7 +119,7 @@ class Recurrence(object):
 
     @wkst.setter
     def wkst(self, value):
-        self._wkst = int(value) if value != None else None
+        self._wkst = _get_int(value)
 
     @property
     def count(self):
@@ -124,7 +127,7 @@ class Recurrence(object):
 
     @count.setter
     def count(self, value):
-        self._count = int(value) if value != None else None
+        self._count = _get_int(value)
 
     @property
     def bysetpos(self):
