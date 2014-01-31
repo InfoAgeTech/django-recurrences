@@ -138,7 +138,7 @@ def get_rrule_form_fields(key_order=None, field_widgets=None, only=None,
     # to get the widget order.
     fields = OrderedDict([])
 
-    from django_recurrences import AbstractRecurrenceModelMixin
+    from django_recurrences.db.models.mixins import AbstractRecurrenceModelMixin
     meta = AbstractRecurrenceModelMixin._meta
 
     for field_name in key_order:

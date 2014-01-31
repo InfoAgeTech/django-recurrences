@@ -1,4 +1,4 @@
-from . import AbstractRecurrenceModelMixin
+from django_recurrences.db.models.mixins import AbstractRecurrenceModelMixin
 
 
 class Recurrence(AbstractRecurrenceModelMixin):

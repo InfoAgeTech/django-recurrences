@@ -4,11 +4,11 @@ from dateutil.rrule import rrule
 from django.db import models
 from django.utils.translation import ugettext as _
 from django_core.db.models.fields import IntegerListField
-from django_recurrences.constants import Day
-from django_recurrences.constants import Frequency
-from django_recurrences.constants import Month
 from python_dates.converters import int_to_weekday
 
+from ...constants import Day
+from ...constants import Frequency
+from ...constants import Month
 from .choices import BY_MONTH_DAY_CHOICES
 from .choices import BY_SET_POS_CHOICES
 from .choices import BY_YEAR_DAY_CHOICES
@@ -23,7 +23,6 @@ from .help_text import BY_SECOND_HELP_TEXT
 from .help_text import BY_WEEK_NUMBER_HELP_TEXT
 from .help_text import BY_YEAR_DAY_HELP_TEXT
 from .managers import RecurrenceManager
-from django_recurrences.rrule import Recurrence
 
 
 class AbstractRecurrenceModelMixin(models.Model):
@@ -227,6 +226,8 @@ class AbstractRecurrenceModelMixin(models.Model):
             if val != None:
                 recurrence[field] = val
 
+        # To avoid naming collisions
+        from ...rrule import Recurrence
         return Recurrence(**recurrence)
 
     def get_rrule(self, recurrence=None):
