@@ -4,7 +4,7 @@ from dateutil.rrule import rrule
 from django.db import models
 from django.utils.translation import ugettext as _
 from django_core.db.models.fields import IntegerListField
-from python_dates.converters import int_to_weekday
+from django_recurrences.utils.converters import int_to_weekday
 
 from ...constants import Day
 from ...constants import Frequency
