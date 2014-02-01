@@ -6,7 +6,7 @@ from ..constants import Frequency
 from ..constants import Day
 
 # TODO: would like to implement the commented out choices below. See:
-# https://github.com/InfoAgeTech/django-recurrence/issues/1
+# https://github.com/infoagetech/django-recurrence/issues/1
 FREQUENCY_CHOICES = (
     (Frequency.ONCE, _('Never')),
     (Frequency.DAILY, _('Daily')),
